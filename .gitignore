@@ -52,3 +52,4 @@ coverage/
 .turbo/
 .vite/
 .cache/
+.vscode/
