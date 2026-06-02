@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0B1120"/>
+      <stop offset="100%" stop-color="#1a2744"/>
+    </linearGradient>
+    <linearGradient id="beeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f97316"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background Circle -->
+  <circle cx="256" cy="256" r="256" fill="url(#bgGrad)"/>
+
+  <!-- Bee Body -->
+  <ellipse cx="256" cy="260" rx="120" ry="100" fill="url(#beeGrad)"/>
+
+  <!-- Bee Stripes -->
+  <rect x="180" y="220" width="60" height="16" rx="4" fill="#0B1120" opacity="0.3"/>
+  <rect x="180" y="252" width="60" height="16" rx="4" fill="#0B1120" opacity="0.3"/>
+  <rect x="180" y="284" width="60" height="16" rx="4" fill="#0B1120" opacity="0.3"/>
+
+  <!-- Bee Wings -->
+  <ellipse cx="180" cy="220" rx="50" ry="70" fill="white" opacity="0.3" transform="rotate(-20 180 220)"/>
+  <ellipse cx="332" cy="220" rx="50" ry="70" fill="white" opacity="0.3" transform="rotate(20 332 220)"/>
+
+  <!-- Bee Head -->
+  <circle cx="256" cy="160" r="50" fill="url(#beeGrad)"/>
+
+  <!-- Bee Eyes -->
+  <circle cx="240" cy="155" r="12" fill="#0B1120"/>
+  <circle cx="272" cy="155" r="12" fill="#0B1120"/>
+  <circle cx="243" cy="152" r="4" fill="white"/>
+  <circle cx="275" cy="152" r="4" fill="white"/>
+
+  <!-- Antennae -->
+  <path d="M240 115 Q230 80 200 60" stroke="url(#beeGrad)" stroke-width="8" fill="none" stroke-linecap="round"/>
+  <path d="M272 115 Q282 80 312 60" stroke="url(#beeGrad)" stroke-width="8" fill="none" stroke-linecap="round"/>
+
+  <!-- Antenna Tips -->
+  <circle cx="200" cy="60" r="10" fill="#0B1120"/>
+  <circle cx="312" cy="60" r="10" fill="#0B1120"/>
+
+  <!-- Uni Text -->
+  <text x="256" y="380" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold" font-size="40" fill="white">UniBee</text>
+</svg>
