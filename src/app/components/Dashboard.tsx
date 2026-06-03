@@ -1,12 +1,31 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { motion } from "motion/react";
 import { Bell, Ticket, MapPin, Clock, ChevronRight } from "lucide-react";
-import { useNavigate } from "react-router";
-import { EVENTS } from "../data/events";
+import { useNavigate, useOutletContext } from "react-router";
+import { getUpcomingEvents } from "../data/events";
 
 export function Dashboard() {
   const navigate = useNavigate();
   const handleNotifications = () => navigate("/notifications");
+
+  // Get first upcoming event for "Jadwal Terdekatmu"
+  const upcomingEvents = getUpcomingEvents();
+  const nextEvent = upcomingEvents[0];
+
+  // Extract date parts from next event
+  const nextEventDay = nextEvent ? parseInt(nextEvent.date.split(" ")[0], 10) : 16;
+  const nextEventMonth = nextEvent ? nextEvent.date.split(" ").slice(1, 3).join(" ") : "Mei";
+
+  // Receive blockSwipeRef from MainLayout via Outlet context
+  const { blockSwipeRef } = useOutletContext<{ blockSwipeRef: React.MutableRefObject<boolean> }>();
+
+  const handleCarouselTouchStart = useCallback(() => {
+    blockSwipeRef.current = true;
+  }, [blockSwipeRef]);
+
+  const handleCarouselTouchEnd = useCallback(() => {
+    setTimeout(() => { blockSwipeRef.current = false; }, 100);
+  }, [blockSwipeRef]);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0B1120] overflow-x-hidden w-full relative full-h-screen">
@@ -82,8 +101,13 @@ export function Dashboard() {
               Lihat Semua <ChevronRight className="w-4 h-4" />
             </button>
           </div>
-          <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide -mx-6 px-6">
-            {EVENTS.map((event) => (
+          <div
+            className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide -mx-6 px-6"
+            onTouchStart={handleCarouselTouchStart}
+            onTouchMove={handleCarouselTouchStart}
+            onTouchEnd={handleCarouselTouchEnd}
+          >
+            {getUpcomingEvents().map((event) => (
               <div
                 key={event.id}
                 onClick={() => navigate(`/event/${event.id}`)}
@@ -108,22 +132,32 @@ export function Dashboard() {
         {/* UPCOMING SCHEDULE */}
         <motion.section initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.2 }}>
           <h2 className="text-lg font-bold mb-4 text-slate-900 dark:text-white">Jadwal Terdekatmu</h2>
-          <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-md shadow-slate-200/40 flex gap-4 items-center">
-            <div className="bg-orange-50 text-orange-600 w-14 h-14 rounded-xl flex flex-col items-center justify-center shrink-0 border border-orange-100">
-              <span className="text-[10px] font-black uppercase tracking-wider">Besok</span>
-              <span className="text-xl font-black leading-none mt-0.5">16</span>
-            </div>
-            <div className="flex-1">
-              <h4 className="font-bold text-sm text-slate-900 mb-1">Seminar HCI & User Experience</h4>
-              <div className="flex items-center gap-3 text-[11px] text-slate-500 font-medium">
-                <span className="flex items-center gap-1"><Clock className="w-3 h-3"/> 10:00 AM</span>
-                <span className="flex items-center gap-1"><MapPin className="w-3 h-3"/> Ruang Teater</span>
+          {nextEvent ? (
+            <div
+              onClick={() => navigate(`/event/${nextEvent.id}`)}
+              className="bg-white border border-slate-200 rounded-2xl p-4 shadow-md shadow-slate-200/40 flex gap-4 items-center cursor-pointer hover:-translate-y-1 transition-transform"
+            >
+              <div className="bg-orange-50 text-orange-600 w-14 h-14 rounded-xl flex flex-col items-center justify-center shrink-0 border border-orange-100">
+                <span className="text-[10px] font-black uppercase tracking-wider">{nextEventMonth.slice(0, 3)}</span>
+                <span className="text-xl font-black leading-none mt-0.5">{nextEventDay}</span>
               </div>
+              <div className="flex-1">
+                <h4 className="font-bold text-sm text-slate-900 mb-1">{nextEvent.title}</h4>
+                <div className="flex items-center gap-3 text-[11px] text-slate-500 font-medium">
+                  <span className="flex items-center gap-1"><Clock className="w-3 h-3"/> {nextEvent.time}</span>
+                  <span className="flex items-center gap-1 truncate max-w-[140px]"><MapPin className="w-3 h-3"/> {nextEvent.location}</span>
+                </div>
+              </div>
+              <button onClick={(e) => { e.stopPropagation(); navigate('/tickets'); }} className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100 hover:bg-blue-100 transition-colors">
+                <Ticket className="w-4 h-4" />
+              </button>
             </div>
-            <button onClick={() => navigate('/tickets')} className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100 hover:bg-blue-100 transition-colors">
-              <Ticket className="w-4 h-4" />
-            </button>
-          </div>
+          ) : (
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-md text-center">
+              <p className="text-slate-500 text-sm">Tidak ada acara mendatang.</p>
+              <button onClick={() => navigate('/explore')} className="mt-3 text-orange-500 font-bold text-sm hover:underline">Cari Event Baru</button>
+            </div>
+          )}
         </motion.section>
       </main>
 

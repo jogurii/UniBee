@@ -64,9 +64,7 @@ export function EventDetail() {
 
   const quotaPercent = Math.round((event.quotaRemaining / event.quotaTotal) * 100);
   const isLowQuota = quotaPercent <= 20;
-  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-    event.location + " BINUS @Medan"
-  )}`;
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.mapsQuery)}`;
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0B1120] pb-24 overflow-x-hidden full-h-screen">
@@ -132,7 +130,7 @@ export function EventDetail() {
               </div>
               <div>
                 <p className="text-xs text-slate-500 uppercase tracking-wider">Waktu</p>
-                <p className="text-sm font-bold text-slate-900 dark:text-white">{event.time}</p>
+                <p className="text-sm font-bold text-slate-900 dark:text-white">{event.time} - {event.endTime}</p>
               </div>
             </div>
             <div className="flex items-start gap-3">

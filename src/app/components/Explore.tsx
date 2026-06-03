@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { Search, Filter, Clock, MapPin, CheckCircle, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router";
-import { EVENTS } from "../data/events";
+import { EVENTS, type CampusEvent } from "../data/events";
 
 export function Explore() {
   const navigate = useNavigate();
@@ -48,7 +48,7 @@ export function Explore() {
         <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
           <button className="touch-target px-4 py-1.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-full text-xs font-semibold whitespace-nowrap shadow-lg shadow-orange-500/30">Semua</button>
           <button className="touch-target px-4 py-1.5 bg-white/10 border border-white/20 text-white rounded-full text-xs font-medium whitespace-nowrap hover:bg-white/20 flex items-center gap-1.5">
-            <div className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse shadow-[0_0_5px_rgba(249,115,22,1)]"></div>
+            <div className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse shadow-[0_0_5px_rgba(249,115,22,1)]" />
             TFI Comserv
           </button>
           <button className="touch-target px-4 py-1.5 bg-white/10 border border-white/20 text-slate-200 rounded-full text-xs font-medium whitespace-nowrap hover:bg-white/20">SAT Points</button>
@@ -56,12 +56,12 @@ export function Explore() {
         </div>
       </header>
 
-      {/* KONTEN UTAMA */}
+      {/* MAIN CONTENT */}
       <main className="px-4 pt-40 py-4 space-y-6 pb-6">
         <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
           <h2 className="text-lg font-bold mb-5 flex items-center gap-2 text-slate-900 dark:text-white">
             Rekomendasi Untukmu
-            <span className="w-1.5 h-1.5 bg-orange-500 rounded-full"></span>
+            <span className="w-1.5 h-1.5 bg-orange-500 rounded-full" />
           </h2>
 
           <div className="space-y-6">
@@ -76,7 +76,7 @@ export function Explore() {
               >
                 <div className="relative h-48 overflow-hidden">
                   <img src={event.image} alt={event.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                  
+
                   {event.isTFI && (
                     <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-md border border-white/40 text-slate-900 px-3 py-1.5 rounded-xl flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest shadow-xl">
                       <div className="bg-gradient-to-tr from-orange-500 to-amber-400 p-0.5 rounded-full shadow-sm">
@@ -86,7 +86,7 @@ export function Explore() {
                     </div>
                   )}
 
-                  <div className={`absolute bottom-4 right-4 px-3 py-1.5 rounded-xl text-[11px] font-bold shadow-lg border backdrop-blur-md 
+                  <div className={`absolute bottom-4 right-4 px-3 py-1.5 rounded-xl text-[11px] font-bold shadow-lg border backdrop-blur-md
                     ${event.type === 'Comserv' ? 'bg-blue-100/95 border-blue-300 text-blue-700' : 'bg-orange-100/95 border-orange-300 text-orange-700'}`}>
                     {event.reward}
                   </div>
