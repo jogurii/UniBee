@@ -13,32 +13,35 @@ import { Notifications } from "./components/Notifications";
 import { Profile } from "./components/Profile";
 import { Schedule } from "./components/Schedule";
 
-export const router = createBrowserRouter([
-  {
-    path: "/",
-    Component: Root,
-    children: [
-      { index: true, Component: SplashScreen },
-      { path: "login", Component: LoginPage },
-      
-      // HALAMAN TANPA BOTTOM NAV (Layar Penuh)
-      { path: "event/:id", Component: EventDetail },
-      { path: "scanner", Component: CommitteeScanner },
-      { path: "notifications", Component: Notifications },
-      
-      // HALAMAN DENGAN BOTTOM NAV (Dibungkus Layout)
-      {
-        path: "/",
-        Component: MainLayout,
-        children: [
-          { path: "dashboard", Component: Dashboard },
-          { path: "explore", Component: Explore },
-          { path: "tickets", Component: MyTickets },
-          { path: "schedule", Component: Schedule },
-          { path: "profile", Component: Profile },
-          { path: "achievements", Component: Achievements },
-        ],
-      },
-    ],
-  },
-]);
+export const router = createBrowserRouter(
+  [
+    {
+      path: "/",
+      Component: Root,
+      children: [
+        { index: true, Component: SplashScreen },
+        { path: "login", Component: LoginPage },
+
+        // HALAMAN TANPA BOTTOM NAV (Layar Penuh)
+        { path: "event/:id", Component: EventDetail },
+        { path: "scanner", Component: CommitteeScanner },
+        { path: "notifications", Component: Notifications },
+
+        // HALAMAN DENGAN BOTTOM NAV (Dibungkus Layout)
+        {
+          path: "/",
+          Component: MainLayout,
+          children: [
+            { path: "dashboard", Component: Dashboard },
+            { path: "explore", Component: Explore },
+            { path: "tickets", Component: MyTickets },
+            { path: "schedule", Component: Schedule },
+            { path: "profile", Component: Profile },
+            { path: "achievements", Component: Achievements },
+          ],
+        },
+      ],
+    },
+  ],
+  { basename: import.meta.env.BASE_URL }
+);
