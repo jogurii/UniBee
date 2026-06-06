@@ -1,7 +1,7 @@
 import React, { useEffect, createContext, useContext, useState, useCallback, useRef } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router";
 import { Home, Compass, Ticket, Calendar, User } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 
 interface BottomNavContextType {
   isVisible: boolean;
