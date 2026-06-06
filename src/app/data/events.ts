@@ -1,31 +1,9 @@
-export type EventReward = {
-  satPoints?: string;
-  certificate?: string;
-  eWallet?: string;
-};
+import type { CampusEvent, EventReward, EventStatus } from "../utils/types";
 
-export type EventStatus = "Upcoming" | "Past" | "Confirmed";
+// Re-export for backwards compatibility
+export type { CampusEvent, EventReward, EventStatus };
 
-export type CampusEvent = {
-  id: number;
-  title: string;
-  organizer: string;
-  date: string;
-  time: string;
-  endTime: string;
-  location: string;
-  mapsQuery: string;
-  image: string;
-  description: string;
-  reward: string;
-  rewards: EventReward;
-  type: "Comserv" | "Seminar";
-  isTFI: boolean;
-  quotaRemaining: number;
-  quotaTotal: number;
-  status: EventStatus;
-  ticketCode: string;
-};
+// All types are now defined in ../utils/types.ts
 
 export const EVENTS: CampusEvent[] = [
   {

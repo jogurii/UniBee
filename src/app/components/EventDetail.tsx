@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState, memo } from "react";
 import { motion } from "motion/react";
 import {
   ArrowLeft,
@@ -12,22 +12,13 @@ import {
   CheckCircle2,
   Users,
   AlertCircle,
-  HeartHandshake, // Tambahkan ikon ini untuk TFI
+  HeartHandshake,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router";
 import { getEventById } from "../data/events";
+import type { RewardRowProps } from "../utils/types";
 
-function RewardRow({
-  icon,
-  label,
-  value,
-  iconClass,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  iconClass: string;
-}) {
+const RewardRow = memo(function RewardRow({ icon, label, value, iconClass }: RewardRowProps) {
   return (
     <div className="flex items-center gap-3 bg-white/80 dark:bg-white/10 rounded-2xl px-4 py-3 border border-amber-200/50 dark:border-white/10">
       <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${iconClass}`}>{icon}</div>
@@ -37,7 +28,7 @@ function RewardRow({
       </div>
     </div>
   );
-}
+});
 
 export function EventDetail() {
   const { id } = useParams();
@@ -71,7 +62,7 @@ export function EventDetail() {
 
       {/* HEADER IMAGE & BADGE */}
       <div className="relative h-72 sm:h-80 w-full">
-        <img src={event.image} alt={event.title} className="absolute inset-0 w-full h-full object-cover" />
+        <img src={event.image} alt={event.title} loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0B1120] via-[#0B1120]/40 to-black/30" />
         <button
           type="button"

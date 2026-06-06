@@ -1,29 +1,35 @@
-import React, { useState } from "react";
+import { useState, useCallback } from "react";
 import { motion } from "motion/react";
 import {
   Download, Moon, Sun, Bell, ShieldCheck, LogOut, ChevronRight,
-  Home, Compass, Ticket, Calendar, User, Loader2, CheckCircle, FileText, Mail, Fingerprint, Award, ScanLine
+  Loader2, CheckCircle, FileText, Mail, Fingerprint, Award, ScanLine
 } from "lucide-react";
 import { useNavigate } from "react-router";
 import { useTheme } from "./ThemeContext";
+import { useUser } from "../contexts/UserContext";
+
+// Download timeout constants (ms)
+const DOWNLOAD_DURATION_MS = 2000;
+const DOWNLOAD_RESET_DELAY_MS = 3000;
 
 export function Profile() {
   const navigate = useNavigate();
   const { isDark, toggleTheme } = useTheme();
+  const user = useUser();
   const [notifEnabled, setNotifEnabled] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isDownloaded, setIsDownloaded] = useState(false);
 
-  const handleDownload = () => {
+  const handleDownload = useCallback(() => {
     if (isDownloaded) return;
     setIsDownloading(true);
     setTimeout(() => {
       setIsDownloading(false);
       setIsDownloaded(true);
-      setTimeout(() => setIsDownloaded(false), 3000); // Reset setelah 3 detik
-    }, 2000);
-  };
-  
+      setTimeout(() => setIsDownloaded(false), DOWNLOAD_RESET_DELAY_MS);
+    }, DOWNLOAD_DURATION_MS);
+  }, [isDownloaded]);
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0B1120] text-slate-900 dark:text-white pb-24 overflow-x-hidden full-h-screen">
 
@@ -34,22 +40,23 @@ export function Profile() {
           <div className="relative group">
             <div className="w-28 h-28 rounded-full bg-gradient-to-tr from-orange-500 to-amber-400 p-1 shadow-2xl touch-target">
               <img
-                src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80"
-                alt="Mahasiswa Profile"
+                src={user.avatar}
+                alt={`${user.name}'s profile`}
+                loading="eager"
                 className="w-full h-full rounded-full border-4 border-[#0B1120] object-cover"
               />
             </div>
-            <button className="absolute bottom-1 right-1 w-8 h-8 bg-orange-500 rounded-full border-2 border-[#0B1120] flex items-center justify-center shadow-lg touch-target">
+            <button aria-label="Biometric authentication" className="absolute bottom-1 right-1 w-8 h-8 bg-orange-500 rounded-full border-2 border-[#0B1120] flex items-center justify-center shadow-lg touch-target">
               <Fingerprint className="w-4 h-4 text-white" />
             </button>
           </div>
-          <h1 className="mt-5 text-2xl font-black text-white tracking-tight">Mahasiswa</h1>
-          <p className="text-slate-400 font-medium text-sm">NIM: 290xxxx413</p>
+          <h1 className="mt-5 text-2xl font-black text-white tracking-tight">{user.name}</h1>
+          <p className="text-slate-400 font-medium text-sm">NIM: {user.nim}</p>
         </div>
       </header>
 
       <main className="px-6 -mt-6 space-y-5 relative z-10 pb-6">
-        
+
         {/* BIODATA CARD */}
         <section className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 backdrop-blur-xl rounded-[2.5rem] p-6 shadow-xl shadow-slate-200/50 dark:shadow-none flex flex-col gap-5">
           <div className="flex items-center gap-4">
@@ -58,7 +65,7 @@ export function Profile() {
             </div>
             <div>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Email Kampus</p>
-              <p className="text-sm font-bold">maha.siswa@binus.ac.id</p>
+              <p className="text-sm font-bold">{user.email}</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -67,7 +74,7 @@ export function Profile() {
             </div>
             <div>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Jurusan</p>
-              <p className="text-sm font-bold">Computer Science - BINUS @Medan</p>
+              <p className="text-sm font-bold">{user.program} - {user.campus}</p>
             </div>
           </div>
         </section>

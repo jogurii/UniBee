@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { ArrowLeft, Bell, CheckSquare, CalendarClock, Award, TicketCheck, CheckCircle, MessageSquareWarning, Check, X } from "lucide-react";
+import { ArrowLeft, Bell, CheckSquare, CalendarClock, Award, TicketCheck, MessageSquareWarning, X } from "lucide-react";
 import { useNavigate } from "react-router";
+import type { Notification } from "../utils/types";
 
-// Data dummy notifikasi
-const INITIAL_NOTIFS = [
+// Static notification data - moved outside component to prevent recreation
+const INITIAL_NOTIFS: Notification[] = [
   {
     id: 1,
     type: "reminder",
@@ -49,30 +50,27 @@ const INITIAL_NOTIFS = [
     bgColor: "bg-white dark:bg-white/5",
     iconBg: "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600",
   }
-];
+] as const;
 
 export function Notifications() {
   const navigate = useNavigate();
   const [notifs, setNotifs] = useState(INITIAL_NOTIFS);
-  const [selectedActionNotif, setSelectedActionNotif] = useState(false); // State untuk Pop-up TFI
+  const [selectedActionNotif, setSelectedActionNotif] = useState(false);
 
-  // Fungsi untuk menandai semua sudah dibaca
-  const markAllAsRead = () => {
-    const updatedNotifs = notifs.map(n => ({ ...n, unread: false }));
-    setNotifs(updatedNotifs);
-  };
+  // Mark all notifications as read
+  const markAllAsRead = useCallback(() => {
+    setNotifs(prev => prev.map(n => ({ ...n, unread: false })));
+  }, []);
 
-  // Fungsi untuk menangani klik notifikasi
-  const handleNotifClick = (notif: any) => {
-    // Tandai dibaca
-    const updatedNotifs = notifs.map(n => n.id === notif.id ? { ...n, unread: false } : n);
-    setNotifs(updatedNotifs);
+  // Handle notification click - marks as read and triggers popup for action type
+  const handleNotifClick = useCallback((notif: Notification) => {
+    setNotifs(prev => prev.map(n => n.id === notif.id ? { ...n, unread: false } : n));
 
-    // IDE 2: TRIGGER POP-UP JIKA TIPE NOTIFIKASI ADALAH "ACTION" (TFI)
+    // Trigger popup for action type notifications (TFI reflection)
     if (notif.type === "action") {
       setSelectedActionNotif(true);
     }
-  };
+  }, []);
 
   const unreadCount = notifs.filter(n => n.unread).length;
 

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState, useMemo, memo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   ArrowLeft,
@@ -10,23 +10,45 @@ import {
   HeartHandshake
 } from "lucide-react";
 import { useNavigate } from "react-router";
+import type { ProgressRingProps } from "../utils/types";
 
-// Sub-komponen untuk Cincin Progress
-function ProgressRing({ percentage, color, label, value, subValue }: any) {
-  const radius = 70;
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (percentage / 100) * circumference;
+// ProgressRing constants - moved outside component for stability
+const RING_RADIUS = 70;
+const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
+
+// Static activity data - moved outside component to prevent recreation
+const ACTIVITIES = [
+  { id: "act-1", title: "Penanaman Pohon (Panti Jompo)", date: "14 Mei 2026", points: "+5 Jam", status: "Pending Refleksi", isTFI: true },
+  { id: "act-2", title: "Seminar Career 101", date: "10 Apr 2026", points: "+2 SAT", status: "Verified", isTFI: false },
+  { id: "act-3", title: "Relawan Sibandang (TFI)", date: "20 Nov 2025", points: "+10 Jam", status: "Verified", isTFI: true },
+  { id: "act-4", title: "HCI Workshop", date: "16 Mei 2026", points: "+4 SAT", status: "Pending", isTFI: false },
+] as const;
+
+// Static SAT category data
+const SAT_CATEGORIES = [
+  { cat: "Seminar/Workshop", val: 41, max: 50, color: "bg-orange-500" },
+  { cat: "Organisasi/UKM", val: 24, max: 40, color: "bg-amber-500" },
+  { cat: "Lomba & Kompetisi", val: 20, max: 30, color: "bg-rose-500" }
+] as const;
+
+// Memoized ProgressRing component
+const ProgressRing = memo(function ProgressRing({ percentage, color, label, value, subValue }: ProgressRingProps) {
+  // Memoize strokeDashoffset calculation
+  const strokeDashoffset = useMemo(
+    () => RING_CIRCUMFERENCE - (percentage / 100) * RING_CIRCUMFERENCE,
+    [percentage]
+  );
 
   return (
     <div className="flex flex-col items-center">
       <div className="relative w-40 h-40 flex items-center justify-center">
         {/* Lingkaran Background - Dikunci warnanya agar terlihat elegan di atas Navy */}
         <svg className="w-full h-full transform -rotate-90">
-          <circle cx="80" cy="80" r={radius} stroke="currentColor" strokeWidth="12" fill="transparent" className="text-white/10" />
+          <circle cx="80" cy="80" r={RING_RADIUS} stroke="currentColor" strokeWidth="12" fill="transparent" className="text-white/10" />
           {/* Lingkaran Progress */}
           <motion.circle
-            cx="80" cy="80" r={radius} stroke={color} strokeWidth="12" strokeDasharray={circumference}
-            initial={{ strokeDashoffset: circumference }} animate={{ strokeDashoffset }}
+            cx="80" cy="80" r={RING_RADIUS} stroke={color} strokeWidth="12" strokeDasharray={RING_CIRCUMFERENCE}
+            initial={{ strokeDashoffset: RING_CIRCUMFERENCE }} animate={{ strokeDashoffset }}
             transition={{ duration: 1.5, ease: "easeOut" }} strokeLinecap="round" fill="transparent"
           />
         </svg>
@@ -42,7 +64,7 @@ function ProgressRing({ percentage, color, label, value, subValue }: any) {
       </div>
     </div>
   );
-}
+});
 
 export function Achievements() {
   const navigate = useNavigate();
@@ -126,20 +148,16 @@ export function Achievements() {
             </div>
 
             <div className="space-y-5 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-[2rem] p-6 shadow-sm shadow-slate-200/50 dark:shadow-none">
-              {[
-                { cat: "Seminar/Workshop", val: 41, max: 50, color: "bg-orange-500" },
-                { cat: "Organisasi/UKM", val: 24, max: 40, color: "bg-amber-500" },
-                { cat: "Lomba & Kompetisi", val: 20, max: 30, color: "bg-rose-500" }
-              ].map((item, idx) => (
-                <div key={idx}>
+              {SAT_CATEGORIES.map((item) => (
+                <div key={item.cat}>
                   <div className="flex justify-between text-xs font-bold mb-2">
                     <span className="text-slate-600 dark:text-slate-300">{item.cat}</span>
                     <span className="text-slate-900 dark:text-white">{item.val} / {item.max}</span>
                   </div>
                   <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                    <motion.div 
+                    <motion.div
                       initial={{ width: 0 }} animate={{ width: `${(item.val / item.max) * 100}%` }}
-                      transition={{ duration: 1, delay: 0.5 + (idx * 0.2) }}
+                      transition={{ duration: 1, delay: 0.5 }}
                       className={`h-full ${item.color} rounded-full`}
                     />
                   </div>
@@ -157,21 +175,15 @@ export function Achievements() {
           </h2>
 
           <div className="space-y-4">
-            {[
-              // PERBAIKAN TANGGAL: Diubah menjadi "14 Mei 2026" agar relevan dengan "Kemarin"
-              { title: "Penanaman Pohon (Panti Jompo)", date: "14 Mei 2026", points: "+5 Jam", status: "Pending Refleksi", isTFI: true },
-              { title: "Seminar Career 101", date: "10 Apr 2026", points: "+2 SAT", status: "Verified", isTFI: false },
-              { title: "Relawan Sibandang (TFI)", date: "20 Nov 2025", points: "+10 Jam", status: "Verified", isTFI: true },
-              { title: "HCI Workshop", date: "16 Mei 2026", points: "+4 SAT", status: "Pending", isTFI: false },
-            ]
-            // Logika Filter
+            {ACTIVITIES
+ // Logika Filter
             .filter(item => {
               if (activeTab === "TFI Comserv") return item.isTFI;
               if (activeTab === "SAT Points") return !item.isTFI;
               return true; // Untuk tab "Overview" tampilkan semua
             })
-            .map((activity, idx) => (
-              <div key={idx} className="flex items-center justify-between p-5 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl shadow-sm">
+            .map((activity) => (
+              <div key={activity.id} className="flex items-center justify-between p-5 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl shadow-sm">
                 <div className="flex gap-4 items-center">
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${activity.status === 'Verified' ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-600' : 'bg-amber-50 dark:bg-amber-500/20 text-amber-600'}`}>
                     {activity.status === 'Verified' ? <CheckCircle2 className="w-5 h-5" /> : <Clock className="w-5 h-5" />}

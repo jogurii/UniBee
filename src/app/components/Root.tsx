@@ -1,7 +1,12 @@
-import React from "react";
+import { memo } from "react";
 import { Outlet } from "react-router";
 
-export function Root() {
+/**
+ * Root layout component - wraps the entire app with desktop shell styling.
+ * Pure presentational component with no state; wrapped in memo to prevent
+ * unnecessary re-renders when parent context changes.
+ */
+function RootComponent() {
   return (
     <div className="desktop-shell">
       {/* Decorative background blobs */}
@@ -26,3 +31,6 @@ export function Root() {
     </div>
   );
 }
+
+// Wrap with memo since this is a pure presentational component with no state
+export const Root = memo(RootComponent);

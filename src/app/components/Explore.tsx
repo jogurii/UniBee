@@ -4,6 +4,12 @@ import { Search, Filter, Clock, MapPin, CheckCircle, ChevronRight } from "lucide
 import { useNavigate } from "react-router";
 import { EVENTS, type CampusEvent } from "../data/events";
 
+// Cache DOM element refs outside the component
+const domRefs = {
+  pfContent: null as HTMLElement | null,
+  phoneScreen: null as HTMLElement | null,
+};
+
 export function Explore() {
   const navigate = useNavigate();
 
@@ -11,28 +17,23 @@ export function Explore() {
   const lastScrollY = useRef(0);
   const ticking = useRef(false);
 
+  // Update header visibility - stable function
   const updateHeaderVisibility = useCallback(() => {
-    // Desktop: scroll in .pf-content; Mobile: scroll in .phone-screen or window
-    const pfContent = document.querySelector('.pf-content') as HTMLElement;
-    const phoneScreen = document.querySelector('.phone-screen') as HTMLElement;
-
     let scrollTop: number;
-    if (pfContent && window.innerWidth >= 768) {
-      scrollTop = pfContent.scrollTop;
-    } else if (phoneScreen) {
-      scrollTop = phoneScreen.scrollTop;
+
+    if (domRefs.pfContent && window.innerWidth >= 768) {
+      scrollTop = domRefs.pfContent.scrollTop;
+    } else if (domRefs.phoneScreen) {
+      scrollTop = domRefs.phoneScreen.scrollTop;
     } else {
       scrollTop = window.scrollY;
     }
 
     const scrollDelta = scrollTop - lastScrollY.current;
 
-    // Scrolling down → hide
     if (scrollDelta > 2) {
       setIsHeaderVisible(false);
-    }
-    // Scrolling up → show
-    else if (scrollDelta < -2) {
+    } else if (scrollDelta < -2) {
       setIsHeaderVisible(true);
     }
 
@@ -40,6 +41,7 @@ export function Explore() {
     ticking.current = false;
   }, []);
 
+  // Stable scroll handler using requestAnimationFrame
   const handleScroll = useCallback(() => {
     if (!ticking.current) {
       window.requestAnimationFrame(updateHeaderVisibility);
@@ -47,31 +49,33 @@ export function Explore() {
     }
   }, [updateHeaderVisibility]);
 
+  // Setup and cleanup scroll listeners
   useEffect(() => {
-    const pfContent = document.querySelector('.pf-content') as HTMLElement;
-    const phoneScreen = document.querySelector('.phone-screen') as HTMLElement;
-    const isDesktop = pfContent && window.innerWidth >= 768;
+    // Cache DOM references once
+    domRefs.pfContent = document.querySelector('.pf-content') as HTMLElement;
+    domRefs.phoneScreen = document.querySelector('.phone-screen') as HTMLElement;
 
     // Initialize scroll position
-    if (isDesktop) {
-      lastScrollY.current = pfContent.scrollTop;
-      pfContent.addEventListener("scroll", handleScroll, { passive: true });
-    } else if (phoneScreen) {
-      lastScrollY.current = phoneScreen.scrollTop;
-      phoneScreen.addEventListener("scroll", handleScroll, { passive: true });
+    if (domRefs.pfContent && window.innerWidth >= 768) {
+      lastScrollY.current = domRefs.pfContent.scrollTop;
+      domRefs.pfContent.addEventListener("scroll", handleScroll, { passive: true });
+    } else if (domRefs.phoneScreen) {
+      lastScrollY.current = domRefs.phoneScreen.scrollTop;
+      domRefs.phoneScreen.addEventListener("scroll", handleScroll, { passive: true });
     } else {
       lastScrollY.current = window.scrollY;
       window.addEventListener("scroll", handleScroll, { passive: true });
     }
 
     return () => {
-      if (isDesktop) {
-        pfContent.removeEventListener("scroll", handleScroll);
-      } else if (phoneScreen) {
-        phoneScreen.removeEventListener("scroll", handleScroll);
+      if (domRefs.pfContent && window.innerWidth >= 768) {
+        domRefs.pfContent.removeEventListener("scroll", handleScroll);
+      } else if (domRefs.phoneScreen) {
+        domRefs.phoneScreen.removeEventListener("scroll", handleScroll);
       } else {
         window.removeEventListener("scroll", handleScroll);
       }
+      ticking.current = false;
     };
   }, [handleScroll]);
 
@@ -121,12 +125,13 @@ export function Explore() {
                 key={event.id}
                 role="button"
                 tabIndex={0}
+                aria-label={`View event details for ${event.title} at ${event.location}`}
                 onClick={() => navigate(`/event/${event.id}`)}
                 onKeyDown={(e) => e.key === "Enter" && navigate(`/event/${event.id}`)}
                 className="group bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-3xl overflow-hidden shadow-lg shadow-slate-200/50 hover:-translate-y-1 transition-all duration-300 cursor-pointer"
               >
                 <div className="relative h-48 overflow-hidden">
-                  <img src={event.image} alt={event.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                  <img src={event.image} alt={`${event.title} event image at ${event.location}`} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
 
                   {event.isTFI && (
                     <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-md border border-white/40 text-slate-900 px-3 py-1.5 rounded-xl flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest shadow-xl">

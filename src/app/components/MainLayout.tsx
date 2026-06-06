@@ -1,62 +1,86 @@
-import React, { useEffect, createContext, useContext, useState, useCallback, useRef } from "react";
+/**
+ * MainLayout Component
+ * Provides swipe navigation and bottom nav bar for the main app pages
+ */
+
+import React, { useEffect, useState, useCallback, useRef, memo } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router";
 import { Home, Compass, Ticket, Calendar, User } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { BottomNavProvider, useBottomNav } from "../contexts/BottomNavContext";
+import { PAGES, getPageIndex, ANIMATION_CONFIG, SWIPE_CONFIG } from "./MainLayout.config";
 
-interface BottomNavContextType {
-  isVisible: boolean;
-  setIsVisible: (visible: boolean) => void;
+// ============================================
+// Sub-components (memoized for performance)
+// ============================================
+
+interface NavButtonProps {
+  icon: React.ReactNode;
+  label: string;
+  isActive: boolean;
+  onClick: () => void;
+  ariaLabel?: string;
 }
 
-const BottomNavContext = createContext<BottomNavContextType>({
-  isVisible: true,
-  setIsVisible: () => {},
+const NavButton = memo(function NavButton({ icon, label, isActive, onClick, ariaLabel }: NavButtonProps) {
+  return (
+    <button
+      onClick={onClick}
+      aria-label={ariaLabel || label}
+      aria-current={isActive ? "page" : undefined}
+      className={`touch-target flex flex-col items-center gap-1 transition-all ${
+        isActive
+          ? "text-orange-600 drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]"
+          : "text-slate-400 hover:text-orange-500"
+      }`}
+    >
+      {icon}
+      <span className="text-[10px] font-bold">{label}</span>
+    </button>
+  );
 });
 
-export const useBottomNav = () => useContext(BottomNavContext);
-
-// Swipe order: dashboard(0) -> explore(1) -> schedule(2) -> profile(3)
-// Tickets is a standalone button — NOT part of the swipe sequence
-const PAGES = ["/dashboard", "/explore", "/schedule", "/profile"];
-
-function getPageIndex(path: string): number {
-  const seg = "/" + path.split("/")[1];
-  return PAGES.indexOf(seg);
+interface TicketButtonProps {
+  onClick: () => void;
 }
 
-export function MainLayout() {
+const TicketButton = memo(function TicketButton({ onClick }: TicketButtonProps) {
+  return (
+    <button
+      onClick={onClick}
+      aria-label="My Tickets"
+      className="w-14 h-14 rounded-full flex items-center justify-center text-white -mt-8 border-4 border-white dark:border-[#0B1120] touch-target transition-transform bg-gradient-to-tr from-orange-400 to-amber-300 shadow-lg hover:-translate-y-1"
+    >
+      <Ticket className="w-6 h-6" />
+    </button>
+  );
+});
+
+// ============================================
+// MainLayout Content (uses context)
+// ============================================
+
+function MainLayoutContent() {
   const navigate = useNavigate();
   const location = useLocation();
   const path = location.pathname;
+  const { isVisible, setIsVisible } = useBottomNav();
 
-  const [isBottomNavVisible, setIsBottomNavVisible] = useState(true);
   const [animKey, setAnimKey] = useState(0);
-  const [slideDir, setSlideDir] = useState(0); // -1=from left, 1=from right
 
   const activeIndex = getPageIndex(path);
-
-  const prevIndexRef = useRef(activeIndex);
   const touchOrigin = useRef<{ x: number; y: number } | null>(null);
   const swipeLocked = useRef(false);
-
-  useEffect(() => {
-    const newIdx = getPageIndex(path);
-
-    if (newIdx !== prevIndexRef.current) {
-      setSlideDir(newIdx > prevIndexRef.current ? 1 : -1);
-      prevIndexRef.current = newIdx;
-    }
-
-    setAnimKey(k => k + 1);
-    window.scrollTo(0, 0);
-    setIsBottomNavVisible(true);
-  }, [path]);
-
-  // Expose a ref that carousel/page components can use to block swipe
-  // Usage: component can set blockSwipeRef.current = true during horizontal scroll
-  // MainLayout checks this at touch-end and skips navigation if true
   const blockSwipeRef = useRef(false);
 
+  // Update animation key and reset nav visibility on route change
+  useEffect(() => {
+    setAnimKey(k => k + 1);
+    window.scrollTo(0, 0);
+    setIsVisible(true);
+  }, [path, setIsVisible]);
+
+  // Touch handlers for swipe navigation
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     touchOrigin.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
     swipeLocked.current = false;
@@ -66,7 +90,7 @@ export function MainLayout() {
     if (!touchOrigin.current || swipeLocked.current) return;
     const dx = e.touches[0].clientX - touchOrigin.current.x;
     const dy = e.touches[0].clientY - touchOrigin.current.y;
-    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 12) {
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > SWIPE_CONFIG.LOCK_THRESHOLD) {
       swipeLocked.current = true;
     }
   }, []);
@@ -78,20 +102,14 @@ export function MainLayout() {
     const delta = endX - touchOrigin.current.x;
 
     if (swipeLocked.current && !blockSwipeRef.current) {
-      const THRESHOLD = 55;
-
-      if (delta < -THRESHOLD) {
+      if (delta < -SWIPE_CONFIG.THRESHOLD) {
         // Swipe LEFT → go forward (to higher index page)
-        // BLOCK at last page (profile, index 3)
         if (activeIndex < PAGES.length - 1) {
-          setSlideDir(1);
           navigate(PAGES[activeIndex + 1]);
         }
-      } else if (delta > THRESHOLD) {
+      } else if (delta > SWIPE_CONFIG.THRESHOLD) {
         // Swipe RIGHT → go backward (to lower index page)
-        // BLOCK at first page (dashboard, index 0)
         if (activeIndex > 0) {
-          setSlideDir(-1);
           navigate(PAGES[activeIndex - 1]);
         }
       }
@@ -107,104 +125,92 @@ export function MainLayout() {
     e.preventDefault();
   }, []);
 
-  const variants = {
-    enter: (dir: number) => ({
-      x: dir >= 1 ? "100%" : "-100%",
-      opacity: 0,
-    }),
-    center: { x: 0, opacity: 1 },
-    exit: (dir: number) => ({
-      x: dir >= 1 ? "-100%" : "100%",
-      opacity: 0,
-    }),
-  };
+  // Navigation handlers
+  const handleNavClick = useCallback((targetIndex: number) => {
+    if (activeIndex !== targetIndex) {
+      navigate(PAGES[targetIndex]);
+    }
+  }, [activeIndex, navigate]);
 
   return (
-    <BottomNavContext.Provider value={{ isVisible: isBottomNavVisible, setIsVisible: setIsBottomNavVisible }}>
+    <div
+      className="relative min-h-screen bg-slate-50 dark:bg-[#0B1120] select-none pf-page"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onContextMenu={handleContextMenu}
+    >
+      {/* Page Content - CSS slide for smooth, non-blocking transitions */}
       <div
-        className="relative min-h-screen bg-slate-50 dark:bg-[#0B1120] select-none pf-page"
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        onContextMenu={handleContextMenu}
+        key={animKey}
+        className="pf-content animate-slide-in"
       >
-        {/* Animated Page Content */}
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={animKey}
-            custom={slideDir}
-            variants={variants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            transition={{ duration: 0.22, ease: "easeOut" }}
-            className="pb-24 pf-content"
-          >
-            <Outlet context={{ blockSwipeRef }} />
-          </motion.div>
-        </AnimatePresence>
-
-        {/* Bottom Navigation Bar */}
-        <AnimatePresence>
-          {isBottomNavVisible && (
-            <motion.nav
-              initial={{ y: 100, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 100, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 300, damping: 30, mass: 0.8 }}
-              className="fixed bottom-0 left-0 w-full bg-white/95 dark:bg-[#0B1120]/80 backdrop-blur-xl border-t border-slate-200 dark:border-white/10 px-6 py-4 flex justify-between items-center z-[100] pb-safe shadow-[0_-10px_30px_rgba(0,0,0,0.05)] pf-nav"
-            >
-              <button
-                onClick={() => {
-                  if (activeIndex !== 0) { setSlideDir(-1); navigate(PAGES[0]); }
-                }}
-                className={`touch-target flex flex-col items-center gap-1 transition-all ${activeIndex === 0 ? 'text-orange-600 drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]' : 'text-slate-400 hover:text-orange-500'}`}
-              >
-                <Home className="w-6 h-6" />
-                <span className="text-[10px] font-bold">Home</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  if (activeIndex !== 1) { setSlideDir(activeIndex < 1 ? -1 : 1); navigate(PAGES[1]); }
-                }}
-                className={`touch-target flex flex-col items-center gap-1 transition-all ${activeIndex === 1 ? 'text-orange-600 drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]' : 'text-slate-400 hover:text-orange-500'}`}
-              >
-                <Compass className="w-6 h-6" />
-                <span className="text-[10px] font-bold">Explore</span>
-              </button>
-
-              {/* Tickets — direct navigation only, NOT part of swipe sequence */}
-              <button
-                onClick={() => navigate('/tickets')}
-                className="w-14 h-14 rounded-full flex items-center justify-center text-white -mt-8 border-4 border-white dark:border-[#0B1120] touch-target transition-transform bg-gradient-to-tr from-orange-400 to-amber-300 shadow-lg hover:-translate-y-1"
-              >
-                <Ticket className="w-6 h-6" />
-              </button>
-
-              <button
-                onClick={() => {
-                  if (activeIndex !== 2) { setSlideDir(1); navigate(PAGES[2]); }
-                }}
-                className={`touch-target flex flex-col items-center gap-1 transition-all ${activeIndex === 2 ? 'text-orange-600 drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]' : 'text-slate-400 hover:text-orange-500'}`}
-              >
-                <Calendar className="w-6 h-6" />
-                <span className="text-[10px] font-bold">Schedule</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  if (activeIndex !== 3) { setSlideDir(1); navigate(PAGES[3]); }
-                }}
-                className={`touch-target flex flex-col items-center gap-1 transition-all ${activeIndex === 3 ? 'text-orange-600 drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]' : 'text-slate-400 hover:text-orange-500'}`}
-              >
-                <User className="w-6 h-6" />
-                <span className="text-[10px] font-bold">Profile</span>
-              </button>
-            </motion.nav>
-          )}
-        </AnimatePresence>
+        <Outlet context={{ blockSwipeRef }} />
       </div>
-    </BottomNavContext.Provider>
+
+      {/* Bottom Navigation Bar */}
+      <AnimatePresence>
+        {isVisible && (
+          <motion.nav
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            transition={ANIMATION_CONFIG.SPRING}
+            className="fixed bottom-0 left-0 w-full bg-white/95 dark:bg-[#0B1120]/80 backdrop-blur-xl border-t border-slate-200 dark:border-white/10 px-6 py-4 flex justify-between items-center z-[100] pb-safe shadow-[0_-10px_30px_rgba(0,0,0,0.05)] pf-nav"
+            aria-label="Main navigation"
+          >
+            <NavButton
+              icon={<Home className="w-6 h-6" />}
+              label="Home"
+              isActive={activeIndex === 0}
+              onClick={() => handleNavClick(0)}
+              ariaLabel="Navigate to Home"
+            />
+
+            <NavButton
+              icon={<Compass className="w-6 h-6" />}
+              label="Explore"
+              isActive={activeIndex === 1}
+              onClick={() => handleNavClick(1)}
+              ariaLabel="Navigate to Explore"
+            />
+
+            <TicketButton onClick={() => navigate('/tickets')} />
+
+            <NavButton
+              icon={<Calendar className="w-6 h-6" />}
+              label="Schedule"
+              isActive={activeIndex === 2}
+              onClick={() => handleNavClick(2)}
+              ariaLabel="Navigate to Schedule"
+            />
+
+            <NavButton
+              icon={<User className="w-6 h-6" />}
+              label="Profile"
+              isActive={activeIndex === 3}
+              onClick={() => handleNavClick(3)}
+              ariaLabel="Navigate to Profile"
+            />
+          </motion.nav>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ============================================
+// Wrapper with Provider
+// ============================================
+
+/**
+ * MainLayout wraps the bottom nav pages with the BottomNavProvider
+ * This allows child components to control nav visibility via useBottomNav()
+ */
+export function MainLayout() {
+  return (
+    <BottomNavProvider>
+      <MainLayoutContent />
+    </BottomNavProvider>
   );
 }

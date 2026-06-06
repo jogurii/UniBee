@@ -1,6 +1,12 @@
+/**
+ * Application Router Configuration
+ * React Router 7 with static imports
+ * Note: Lazy loading can be implemented via Vite's build config (build.rollupOptions.input)
+ */
+
 import { createBrowserRouter } from "react-router";
 import { Root } from "./components/Root";
-import { MainLayout } from "./components/MainLayout"; // Import Layout Baru
+import { MainLayout } from "./components/MainLayout";
 import { SplashScreen } from "./components/SplashScreen";
 import { LoginPage } from "./components/LoginPage";
 import { Dashboard } from "./components/Dashboard";
@@ -22,12 +28,12 @@ export const router = createBrowserRouter(
         { index: true, Component: SplashScreen },
         { path: "login", Component: LoginPage },
 
-        // HALAMAN TANPA BOTTOM NAV (Layar Penuh)
+        // Full-screen routes (no bottom nav)
         { path: "event/:id", Component: EventDetail },
         { path: "scanner", Component: CommitteeScanner },
         { path: "notifications", Component: Notifications },
 
-        // HALAMAN DENGAN BOTTOM NAV (Dibungkus Layout)
+        // Main layout routes (with bottom nav)
         {
           path: "/",
           Component: MainLayout,

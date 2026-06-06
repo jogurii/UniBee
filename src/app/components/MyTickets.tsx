@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ArrowLeft, QrCode, Calendar, MapPin, X, AlertTriangle, CheckCircle2, Ticket } from "lucide-react";
 import { useNavigate } from "react-router";
-import { useBottomNav } from "./MainLayout";
+import { useBottomNav } from "../contexts/BottomNavContext";
 import { EVENTS, getUpcomingEvents, getPastEvents, type CampusEvent } from "../data/events";
 
 export function MyTickets() {
@@ -88,7 +88,7 @@ export function MyTickets() {
                 >
                   <div className="flex p-4 gap-4">
                     <div className="w-20 h-20 rounded-2xl overflow-hidden shrink-0">
-                      <img src={ticket.image} className="w-full h-full object-cover" alt={ticket.title} />
+                      <img src={ticket.image} loading="lazy" className="w-full h-full object-cover" alt={ticket.title} />
                     </div>
                     <div className="flex-1 min-w-0">
                       {/* TFI Badge */}
