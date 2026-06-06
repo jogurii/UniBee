@@ -624,17 +624,30 @@ body {
   position: relative;
 }
 
-/* Desktop: show centered phone frame */
+/* Mobile: allow scroll on phone-screen */
+@media (max-width: 767px) {
+  .phone-screen {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Desktop: lock outer scroll so only phone-screen scrolls */
 @media (min-width: 768px) {
+  html, body {
+    overflow: hidden;
+    height: 100%;
+  }
+
   .desktop-shell {
-    min-height: 100dvh;
+    height: 100dvh;
     display: flex;
     align-items: center;
     justify-content: center;
     background: #060d1a;
     position: relative;
     overflow: hidden;
-    padding: 2rem 1rem;
+    padding: 1.5rem 1rem;
     gap: 3rem;
   }
 
@@ -727,12 +740,12 @@ body {
     letter-spacing: 0.02em;
   }
 
-  /* Phone frame container */
+  /* Phone frame container — height fits viewport, width scales with aspect ratio */
   .phone-frame {
-    width: 390px;
-    height: 844px;
+    height: min(844px, calc(100dvh - 3rem));
+    width: calc(min(844px, calc(100dvh - 3rem)) * (390 / 844));
     min-height: unset;
-    border-radius: 50px;
+    border-radius: clamp(30px, 4vw, 50px);
     background: #0B1120;
     box-shadow:
       0 0 0 2px rgba(255,255,255,0.08),
@@ -785,22 +798,79 @@ body {
     z-index: 10;
   }
 
-  /* The scrollable screen content */
+  /* The screen content area — overflow:hidden, internal layout handles scroll */
   .phone-screen {
     width: 100%;
     height: 100%;
     min-height: unset;
-    overflow-y: auto;
+    overflow: hidden;        /* Don't scroll here — let pf-content scroll */
     overflow-x: hidden;
     position: absolute;
     inset: 0;
     scrollbar-width: none;
-    /* Creates a containing block for position:fixed children (bottom nav, modals) */
-    transform: translateZ(0);
+    /* NO transform here — transform caused position:fixed to scroll with content */
   }
 
   .phone-screen::-webkit-scrollbar {
     display: none;
+  }
+
+  /* ── Desktop phone frame layout ─────────────────────────
+     pf-page  : full-height flex column (the MainLayout wrapper)
+     pf-content: scrollable content area that fills remaining space
+     pf-nav   : bottom nav, pinned at bottom via flex + sticky
+  ────────────────────────────────────────────────────── */
+
+  .pf-page {
+    height: 100% !important;
+    min-height: unset !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+  }
+
+  /* Content scrolls within its flex slot, never overscrolls */
+  .pf-content {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    overscroll-behavior: none !important;
+    min-height: 0 !important;   /* Crucial: lets flex child shrink below intrinsic size */
+    padding-bottom: 0 !important; /* Nav is in flow — no extra bottom pad needed */
+    scrollbar-width: none !important;
+  }
+
+  .pf-content::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Strip hardcoded mobile nav paddings and viewport height from inner pages on desktop */
+  .pf-content .min-h-screen {
+    min-height: unset !important;
+  }
+  
+  .pf-content .pb-24,
+  .pf-content .pb-32 {
+    padding-bottom: 1.5rem !important; /* Fallback to a normal padding instead of the huge gap */
+  }
+
+  /* Nav: override fixed → sticky at bottom of flex column */
+  .pf-nav {
+    position: sticky !important;
+    bottom: 0 !important;
+    left: auto !important;
+    flex-shrink: 0 !important;
+    width: 100% !important;
+    z-index: 100 !important;
+  }
+
+  /* Header: override fixed → sticky at top of scroll container */
+  .pf-header {
+    position: sticky !important;
+    top: 0 !important;
+    left: auto !important;
+    width: 100% !important;
+    z-index: 40 !important;
   }
 }
 

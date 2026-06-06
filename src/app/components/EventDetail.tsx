@@ -77,7 +77,7 @@ export function EventDetail() {
           type="button"
           onClick={() => navigate(-1)}
           aria-label="Kembali"
-          className="absolute top-safe-nav left-6 w-11 h-11 rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white z-10 touch-target"
+          className="absolute top-6 left-6 w-11 h-11 rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white z-10 touch-target"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>

@@ -24,10 +24,10 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0B1120]">
+    <div className="h-full flex flex-col bg-[#0B1120] overflow-hidden">
       <AnimatePresence mode="wait">
         {loginStep === "initial" && (
-          <motion.div key="initial" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col min-h-screen justify-center py-8">
+          <motion.div key="initial" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col h-full justify-center py-8">
             {/* Top Section - Logo & Welcome */}
             <div className="px-5 flex flex-col items-center mb-auto mt-16">
               {/* Logo Icon */}
@@ -81,7 +81,7 @@ export function LoginPage() {
 
         {/* SSO EMAIL LOGIN STEP */}
         {loginStep === "sso" && (
-          <motion.div key="sso" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} className="flex flex-col min-h-screen">
+          <motion.div key="sso" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} className="flex flex-col h-full">
             {/* Header */}
             <div className="pt-8 px-5 pb-6 flex items-center gap-4">
               <button onClick={() => setLoginStep("initial")} className="w-11 h-11 rounded-full bg-white/10 flex items-center justify-center text-white border border-white/20 hover:bg-white/20 transition-colors">
@@ -155,7 +155,7 @@ export function LoginPage() {
 
         {/* 2FA VERIFICATION STEP */}
         {loginStep === "2fa" && (
-          <motion.div key="2fa" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} className="flex flex-col min-h-screen">
+          <motion.div key="2fa" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} className="flex flex-col h-full">
             {/* Header */}
             <div className="pt-8 px-5 pb-6 flex items-center gap-4">
               <button onClick={() => setLoginStep("sso")} className="w-11 h-11 rounded-full bg-white/10 flex items-center justify-center text-white border border-white/20 hover:bg-white/20 transition-colors">
@@ -228,7 +228,7 @@ export function LoginPage() {
 
         {/* SUCCESS STEP */}
         {loginStep === "success" && (
-          <motion.div key="success" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="flex flex-col min-h-screen items-center justify-center px-5">
+          <motion.div key="success" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="flex flex-col h-full items-center justify-center px-5">
             <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200, damping: 15 }} className="w-24 h-24 bg-gradient-to-br from-emerald-500 to-green-400 rounded-full flex items-center justify-center mb-8 shadow-xl shadow-emerald-500/30">
               <svg className="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
             </motion.div>

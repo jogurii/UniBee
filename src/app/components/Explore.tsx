@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "motion/react";
 import { Search, Filter, Clock, MapPin, CheckCircle, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router";
@@ -7,28 +7,79 @@ import { EVENTS, type CampusEvent } from "../data/events";
 export function Explore() {
   const navigate = useNavigate();
 
-  const [isVisible, setIsVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const lastScrollY = useRef(0);
+  const ticking = useRef(false);
+
+  const updateHeaderVisibility = useCallback(() => {
+    // Desktop: scroll in .pf-content; Mobile: scroll in .phone-screen or window
+    const pfContent = document.querySelector('.pf-content') as HTMLElement;
+    const phoneScreen = document.querySelector('.phone-screen') as HTMLElement;
+
+    let scrollTop: number;
+    if (pfContent && window.innerWidth >= 768) {
+      scrollTop = pfContent.scrollTop;
+    } else if (phoneScreen) {
+      scrollTop = phoneScreen.scrollTop;
+    } else {
+      scrollTop = window.scrollY;
+    }
+
+    const scrollDelta = scrollTop - lastScrollY.current;
+
+    // Scrolling down → hide
+    if (scrollDelta > 2) {
+      setIsHeaderVisible(false);
+    }
+    // Scrolling up → show
+    else if (scrollDelta < -2) {
+      setIsHeaderVisible(true);
+    }
+
+    lastScrollY.current = scrollTop;
+    ticking.current = false;
+  }, []);
+
+  const handleScroll = useCallback(() => {
+    if (!ticking.current) {
+      window.requestAnimationFrame(updateHeaderVisibility);
+      ticking.current = true;
+    }
+  }, [updateHeaderVisibility]);
 
   useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      if (currentScrollY > lastScrollY && currentScrollY > 50) {
-        setIsVisible(false);
+    const pfContent = document.querySelector('.pf-content') as HTMLElement;
+    const phoneScreen = document.querySelector('.phone-screen') as HTMLElement;
+    const isDesktop = pfContent && window.innerWidth >= 768;
+
+    // Initialize scroll position
+    if (isDesktop) {
+      lastScrollY.current = pfContent.scrollTop;
+      pfContent.addEventListener("scroll", handleScroll, { passive: true });
+    } else if (phoneScreen) {
+      lastScrollY.current = phoneScreen.scrollTop;
+      phoneScreen.addEventListener("scroll", handleScroll, { passive: true });
+    } else {
+      lastScrollY.current = window.scrollY;
+      window.addEventListener("scroll", handleScroll, { passive: true });
+    }
+
+    return () => {
+      if (isDesktop) {
+        pfContent.removeEventListener("scroll", handleScroll);
+      } else if (phoneScreen) {
+        phoneScreen.removeEventListener("scroll", handleScroll);
       } else {
-        setIsVisible(true);
+        window.removeEventListener("scroll", handleScroll);
       }
-      setLastScrollY(currentScrollY);
     };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScrollY]);
+  }, [handleScroll]);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#0B1120] pb-24 overflow-x-hidden full-h-screen">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#0B1120] pb-24">
 
-      {/* HEADER: Compact fixed header */}
-      <header className={`fixed top-0 left-0 w-full z-40 bg-[#0B1120]/95 backdrop-blur-xl border-b border-slate-800 pt-safe-nav px-4 pb-3 shadow-xl transition-transform duration-300 ease-in-out ${isVisible ? "translate-y-0" : "-translate-y-full"}`}>
+      {/* HEADER: sticky inside phone frame, fixed on mobile */}
+      <header className={`pf-header fixed top-0 left-0 w-full z-40 bg-[#0B1120]/95 backdrop-blur-xl border-b border-slate-800 pt-safe-nav px-4 pb-3 shadow-xl transition-transform duration-300 ease-in-out ${isHeaderVisible ? "translate-y-0" : "-translate-y-full"}`}>
         <div className="flex items-center justify-between mb-3">
           <h1 className="text-lg font-bold tracking-tight text-white drop-shadow-sm">Cari Event</h1>
           <button className="touch-target w-10 h-10 bg-white/10 border border-white/20 rounded-xl flex items-center justify-center text-white hover:bg-white/20 transition-colors">
@@ -57,7 +108,7 @@ export function Explore() {
       </header>
 
       {/* MAIN CONTENT */}
-      <main className="px-4 pt-40 py-4 space-y-6 pb-6">
+      <main className="px-4 pt-40 md:pt-4 py-4 space-y-6 pb-6">
         <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
           <h2 className="text-lg font-bold mb-5 flex items-center gap-2 text-slate-900 dark:text-white">
             Rekomendasi Untukmu

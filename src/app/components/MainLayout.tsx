@@ -122,7 +122,7 @@ export function MainLayout() {
   return (
     <BottomNavContext.Provider value={{ isVisible: isBottomNavVisible, setIsVisible: setIsBottomNavVisible }}>
       <div
-        className="relative min-h-screen bg-slate-50 dark:bg-[#0B1120] select-none"
+        className="relative min-h-screen bg-slate-50 dark:bg-[#0B1120] select-none pf-page"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -138,7 +138,7 @@ export function MainLayout() {
             animate="center"
             exit="exit"
             transition={{ duration: 0.22, ease: "easeOut" }}
-            className="pb-24"
+            className="pb-24 pf-content"
           >
             <Outlet context={{ blockSwipeRef }} />
           </motion.div>
@@ -152,7 +152,7 @@ export function MainLayout() {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 100, opacity: 0 }}
               transition={{ type: "spring", stiffness: 300, damping: 30, mass: 0.8 }}
-              className="fixed bottom-0 left-0 w-full bg-white/95 dark:bg-[#0B1120]/80 backdrop-blur-xl border-t border-slate-200 dark:border-white/10 px-6 py-4 flex justify-between items-center z-[100] pb-safe shadow-[0_-10px_30px_rgba(0,0,0,0.05)]"
+              className="fixed bottom-0 left-0 w-full bg-white/95 dark:bg-[#0B1120]/80 backdrop-blur-xl border-t border-slate-200 dark:border-white/10 px-6 py-4 flex justify-between items-center z-[100] pb-safe shadow-[0_-10px_30px_rgba(0,0,0,0.05)] pf-nav"
             >
               <button
                 onClick={() => {

@@ -135,26 +135,26 @@ export function Dashboard() {
           {nextEvent ? (
             <div
               onClick={() => navigate(`/event/${nextEvent.id}`)}
-              className="bg-white border border-slate-200 rounded-2xl p-4 shadow-md shadow-slate-200/40 flex gap-4 items-center cursor-pointer hover:-translate-y-1 transition-transform"
+              className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-4 shadow-md shadow-slate-200/40 dark:shadow-none flex gap-4 items-center cursor-pointer hover:-translate-y-1 transition-transform"
             >
-              <div className="bg-orange-50 text-orange-600 w-14 h-14 rounded-xl flex flex-col items-center justify-center shrink-0 border border-orange-100">
+              <div className="bg-orange-50 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400 w-14 h-14 rounded-xl flex flex-col items-center justify-center shrink-0 border border-orange-100 dark:border-orange-500/30">
                 <span className="text-[10px] font-black uppercase tracking-wider">{nextEventMonth.slice(0, 3)}</span>
                 <span className="text-xl font-black leading-none mt-0.5">{nextEventDay}</span>
               </div>
               <div className="flex-1">
-                <h4 className="font-bold text-sm text-slate-900 mb-1">{nextEvent.title}</h4>
-                <div className="flex items-center gap-3 text-[11px] text-slate-500 font-medium">
+                <h4 className="font-bold text-sm text-slate-900 dark:text-white mb-1">{nextEvent.title}</h4>
+                <div className="flex items-center gap-3 text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                   <span className="flex items-center gap-1"><Clock className="w-3 h-3"/> {nextEvent.time}</span>
                   <span className="flex items-center gap-1 truncate max-w-[140px]"><MapPin className="w-3 h-3"/> {nextEvent.location}</span>
                 </div>
               </div>
-              <button onClick={(e) => { e.stopPropagation(); navigate('/tickets'); }} className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100 hover:bg-blue-100 transition-colors">
+              <button onClick={(e) => { e.stopPropagation(); navigate('/tickets'); }} className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-100 dark:border-blue-500/30 hover:bg-blue-100 dark:hover:bg-blue-500/30 transition-colors">
                 <Ticket className="w-4 h-4" />
               </button>
             </div>
           ) : (
-            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-md text-center">
-              <p className="text-slate-500 text-sm">Tidak ada acara mendatang.</p>
+            <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-6 shadow-md text-center">
+              <p className="text-slate-500 dark:text-slate-400 text-sm">Tidak ada acara mendatang.</p>
               <button onClick={() => navigate('/explore')} className="mt-3 text-orange-500 font-bold text-sm hover:underline">Cari Event Baru</button>
             </div>
           )}

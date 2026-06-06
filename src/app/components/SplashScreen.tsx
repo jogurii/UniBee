@@ -15,7 +15,7 @@ export function SplashScreen() {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-[#0B1120] flex flex-col items-center justify-center full-h-screen">
+    <div className="h-full bg-[#0B1120] flex flex-col items-center justify-center overflow-hidden">
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
