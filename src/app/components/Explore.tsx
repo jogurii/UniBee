@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "motion/react";
 import { Search, Filter, Clock, MapPin, CheckCircle, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router";
-import { EVENTS, type CampusEvent } from "../data/events";
+import { EVENTS } from "../data/events";
 
 // Cache DOM element refs outside the component
 const domRefs = {

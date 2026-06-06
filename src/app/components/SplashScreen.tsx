@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { motion } from "motion/react";
 import { useNavigate } from "react-router";
 import { GraduationCap } from "lucide-react";
