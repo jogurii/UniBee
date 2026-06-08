@@ -8,7 +8,7 @@ import { Outlet, useNavigate, useLocation } from "react-router";
 import { Home, Compass, Ticket, Calendar, User } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { BottomNavProvider, useBottomNav } from "../contexts/BottomNavContext";
-import { PAGES, getPageIndex, ANIMATION_CONFIG, SWIPE_CONFIG } from "./MainLayout.config";
+import { PAGES, getPageIndex, ANIMATION_CONFIG, SWIPE_CONFIG, pageVariants } from "./MainLayout.config";
 
 // ============================================
 // Sub-components (memoized for performance)
@@ -72,7 +72,7 @@ function MainLayoutContent() {
   const path = location.pathname;
   const { isVisible, setIsVisible } = useBottomNav();
 
-  const [animKey, setAnimKey] = useState(0);
+  const [direction, setDirection] = useState(1);
 
   const activeIndex = getPageIndex(path);
   const touchOrigin = useRef<{ x: number; y: number } | null>(null);
@@ -81,7 +81,6 @@ function MainLayoutContent() {
 
   // Update animation key and reset nav visibility on route change
   useEffect(() => {
-    setAnimKey(k => k + 1);
     window.scrollTo(0, 0);
     setIsVisible(true);
   }, [path, setIsVisible]);
@@ -111,11 +110,13 @@ function MainLayoutContent() {
       if (delta < -SWIPE_CONFIG.THRESHOLD) {
         // Swipe LEFT → go forward (to higher index page)
         if (activeIndex < PAGES.length - 1) {
+          setDirection(1);
           navigate(PAGES[activeIndex + 1]);
         }
       } else if (delta > SWIPE_CONFIG.THRESHOLD) {
         // Swipe RIGHT → go backward (to lower index page)
         if (activeIndex > 0) {
+          setDirection(-1);
           navigate(PAGES[activeIndex - 1]);
         }
       }
@@ -134,6 +135,7 @@ function MainLayoutContent() {
   // Navigation handlers
   const handleNavClick = useCallback((targetIndex: number) => {
     if (activeIndex !== targetIndex) {
+      setDirection(targetIndex > activeIndex ? 1 : -1);
       navigate(PAGES[targetIndex]);
     }
   }, [activeIndex, navigate]);
@@ -146,16 +148,24 @@ function MainLayoutContent() {
       onTouchEnd={handleTouchEnd}
       onContextMenu={handleContextMenu}
     >
-      {/* Page Content - CSS slide for smooth, non-blocking transitions */}
-      <div
-        key={animKey}
-        className="pf-content animate-slide-in"
-      >
-        <Outlet context={{ blockSwipeRef }} />
-      </div>
+      {/* Page Content - Animated with Framer Motion for directional sliding */}
+      <AnimatePresence mode="popLayout" custom={direction} initial={false}>
+        <motion.div
+          key={path}
+          custom={direction}
+          variants={pageVariants}
+          initial="enter"
+          animate="center"
+          exit="exit"
+          transition={ANIMATION_CONFIG.PAGE_TRANSITION}
+          className="pf-content"
+        >
+          <Outlet context={{ blockSwipeRef }} />
+        </motion.div>
+      </AnimatePresence>
 
       {/* Bottom Navigation Bar */}
-      <AnimatePresence>
+      <AnimatePresence initial={false}>
         {isVisible && (
           <motion.nav
             initial={{ y: 100, opacity: 0 }}
@@ -181,7 +191,7 @@ function MainLayoutContent() {
               ariaLabel="Navigate to Explore"
             />
 
-            <TicketButton isActive={activeIndex === 2} onClick={() => navigate('/app/tickets')} />
+            <TicketButton isActive={activeIndex === 2} onClick={() => handleNavClick(2)} />
 
             <NavButton
               icon={<Calendar className="w-6 h-6" />}

@@ -1,5 +1,6 @@
 import { memo } from "react";
-import { Outlet } from "react-router";
+import { Outlet, useLocation } from "react-router";
+import { motion, AnimatePresence } from "motion/react";
 
 /**
  * Root layout component - wraps the entire app with desktop shell styling.
@@ -7,6 +8,11 @@ import { Outlet } from "react-router";
  * unnecessary re-renders when parent context changes.
  */
 function RootComponent() {
+  const location = useLocation();
+  // Use only the top-level path segment as the key so nested routes (like inside /app)
+  // don't trigger the root transition and unmount the MainLayout.
+  const rootKey = location.pathname.split('/')[1] || 'root';
+
   return (
     <div className="desktop-shell">
       {/* Decorative background blobs */}
@@ -23,8 +29,19 @@ function RootComponent() {
       {/* Phone frame */}
       <div className="phone-frame">
         <div className="phone-notch" />
-        <div className="phone-screen">
-          <Outlet />
+        <div className="phone-screen bg-[#0B1120]">
+          <AnimatePresence>
+            <motion.div
+              key={rootKey}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+              className="absolute inset-0 w-full h-full"
+            >
+              <Outlet />
+            </motion.div>
+          </AnimatePresence>
         </div>
         <div className="phone-home-bar" />
       </div>

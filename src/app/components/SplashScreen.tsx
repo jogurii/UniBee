@@ -7,45 +7,76 @@ export function SplashScreen() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Navigasi otomatis ke halaman login setelah 2 detik
+    // Hold splash screen for 2.5 seconds before seamless crossfade
     const timer = setTimeout(() => {
       navigate("/login");
-    }, 2000); 
+    }, 2500); 
     return () => clearTimeout(timer);
   }, [navigate]);
 
   return (
-    <div className="h-full bg-[#0B1120] flex flex-col items-center justify-center overflow-hidden">
+    <div className="h-full bg-[#0B1120] flex flex-col items-center justify-center overflow-hidden relative">
       <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="flex flex-col items-center"
+        initial="hidden"
+        animate="visible"
+        variants={{
+          hidden: {},
+          visible: {
+            transition: { staggerChildren: 0.2, delayChildren: 0.1 }
+          }
+        }}
+        className="flex flex-col items-center relative z-10"
       >
         {/* Logo App */}
-        <div className="w-28 h-28 bg-gradient-to-br from-orange-500 to-amber-400 rounded-3xl flex items-center justify-center shadow-2xl shadow-orange-500/30 mb-6">
-          <GraduationCap className="w-16 h-16 text-white" />
-        </div>
+        <motion.div 
+          variants={{
+            hidden: { opacity: 0, scale: 0.9, filter: "blur(10px)" },
+            visible: { 
+              opacity: 1, 
+              scale: 1, 
+              filter: "blur(0px)",
+              transition: { duration: 1.2, ease: [0.22, 1, 0.36, 1] } 
+            }
+          }}
+          className="relative mb-6"
+        >
+          <div className="absolute inset-0 bg-orange-500 rounded-[2rem] blur-2xl opacity-30" />
+          <div className="relative w-28 h-28 bg-gradient-to-br from-orange-500 to-amber-400 rounded-[2rem] flex items-center justify-center shadow-2xl border border-white/10 backdrop-blur-md">
+            <GraduationCap className="w-14 h-14 text-white drop-shadow-md" />
+          </div>
+        </motion.div>
 
         {/* Nama App */}
-        <motion.h1
-          initial={{ y: 10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-          className="text-4xl font-black text-white tracking-tight"
+        <motion.h1 
+          variants={{
+            hidden: { opacity: 0, y: 15 },
+            visible: { 
+              opacity: 1, 
+              y: 0, 
+              transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] } 
+            }
+          }}
+          className="text-4xl font-black text-white tracking-tight drop-shadow-lg"
         >
           UniBee
         </motion.h1>
 
         {/* Versi / Kampus */}
-        <motion.p
-          initial={{ y: 10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.4, duration: 0.5 }}
-          className="text-slate-400 mt-2 text-sm"
+        <motion.div 
+          variants={{
+            hidden: { opacity: 0, y: 10 },
+            visible: { 
+              opacity: 1, 
+              y: 0, 
+              transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] } 
+            }
+          }}
+          className="mt-2 flex flex-col items-center"
         >
-          v1.0 • BINUS University
-        </motion.p>
+          <p className="text-orange-400/80 font-semibold tracking-[0.2em] uppercase text-[10px] mb-1">
+            Student Hub
+          </p>
+        </motion.div>
       </motion.div>
     </div>
   );

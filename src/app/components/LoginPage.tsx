@@ -25,7 +25,7 @@ export function LoginPage() {
 
   return (
     <div className="h-full flex flex-col bg-[#0B1120] overflow-hidden">
-      <AnimatePresence mode="wait">
+      <AnimatePresence mode="wait" initial={false}>
         {loginStep === "initial" && (
           <motion.div key="initial" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col h-full justify-center py-8">
             {/* Top Section - Logo & Welcome */}
