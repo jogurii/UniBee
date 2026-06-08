@@ -21,11 +21,11 @@
 // Core Components
 // ============================================
 
-export { Button, FAB, ButtonGroup, buttonVariants } from "./Button";
-export type { ButtonProps, FABProps, ButtonGroupProps } from "./Button";
+export { Button, FAB, ButtonGroup, buttonVariants } from "./button";
+export type { ButtonProps, FABProps, ButtonGroupProps } from "./button";
 
-export { Badge, StatusBadge, CountBadge, RewardBadge, badgeVariants } from "./Badge";
-export type { BadgeProps, StatusBadgeProps, CountBadgeProps, RewardBadgeProps } from "./Badge";
+export { Badge, StatusBadge, CountBadge, RewardBadge, badgeVariants } from "./badge";
+export type { BadgeProps, StatusBadgeProps, CountBadgeProps, RewardBadgeProps } from "./badge";
 
 export {
   Skeleton,
@@ -34,14 +34,14 @@ export {
   SkeletonCard,
   SkeletonList,
   ContentSkeleton,
-} from "./Skeleton";
-export type { SkeletonProps, SkeletonTextProps, SkeletonAvatarProps, SkeletonCardProps, SkeletonListProps, ContentSkeletonProps } from "./Skeleton";
+} from "./skeleton";
+export type { SkeletonProps, SkeletonTextProps, SkeletonAvatarProps, SkeletonCardProps, SkeletonListProps, ContentSkeletonProps } from "./skeleton";
 
 export { ToastProvider, useToast } from "./Toast";
 export type { Toast, ToastType, ToastContextValue, ToastProviderProps } from "./Toast";
 
-export { Input, Textarea } from "./Input";
-export type { InputProps, TextareaProps } from "./Input";
+export { Input, Textarea } from "./input";
+export type { InputProps, TextareaProps } from "./input";
 
 // ============================================
 // Shadcn UI Components (re-exported for convenience)
