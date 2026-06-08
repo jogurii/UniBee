@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ArrowLeft, Bell, CheckSquare, CalendarClock, Award, TicketCheck, MessageSquareWarning, X } from "lucide-react";
 import { useNavigate } from "react-router";
@@ -35,9 +35,9 @@ const INITIAL_NOTIFS: Notification[] = [
     message: "Kerja bagus di Panti Jompo! Segera isi form refleksi di portal TFI untuk mengklaim 5 Jam Comserv.",
     time: "Kemarin, 14:30",
     unread: false,
-    icon: <MessageSquareWarning className="w-5 h-5 text-amber-500" />,
+    icon: <MessageSquareWarning className="w-5 h-5 text-blue-500" />,
     bgColor: "bg-white dark:bg-white/5",
-    iconBg: "bg-amber-100 dark:bg-amber-500/20 text-amber-600",
+    iconBg: "bg-blue-100 dark:bg-blue-500/20 text-blue-600",
   },
   {
     id: 4,
@@ -200,7 +200,7 @@ export function Notifications() {
               
               <button 
                 onClick={() => setSelectedActionNotif(false)} 
-                className="w-full py-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold rounded-2xl shadow-lg shadow-orange-500/30 hover:-translate-y-1 transition-transform"
+                className="w-full py-4 bg-gradient-to-r from-red-600 to-rose-500 text-white font-bold rounded-2xl shadow-lg shadow-red-500/30 hover:-translate-y-1 transition-transform"
               >
                 Tulis Refleksi di TFI
               </button>

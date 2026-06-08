@@ -1,10 +1,68 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ArrowLeft, QrCode, Calendar, MapPin, X, AlertTriangle, CheckCircle2, Ticket } from "lucide-react";
 import { useNavigate } from "react-router";
 import { useBottomNav } from "../contexts/BottomNavContext";
-import { EVENTS, getUpcomingEvents, getPastEvents, type CampusEvent } from "../data/events";
+import { getUpcomingEvents, getPastEvents, type CampusEvent } from "../data/events";
+import { EmptyState } from "./ui/EmptyState";
+import { Modal } from "./ui/Modal";
 
+const TicketCard = React.memo(({ ticket, onClick }: { ticket: CampusEvent, onClick: () => void }) => (
+  <div
+    onClick={onClick}
+    className="relative flex flex-col bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-3xl overflow-hidden shadow-lg cursor-pointer group hover:-translate-y-1 transition-transform"
+  >
+    <div className="flex p-4 gap-4">
+      <div className="w-20 h-20 rounded-2xl overflow-hidden shrink-0">
+        <img src={ticket.image} loading="lazy" className="w-full h-full object-cover" alt={ticket.title} />
+      </div>
+      <div className="flex-1 min-w-0">
+        {/* TFI Badge */}
+        {ticket.isTFI && (
+          <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-100 dark:bg-red-500/20 rounded-md mb-1">
+            <div className="w-1.5 h-1.5 bg-red-500 rounded-full" />
+            <span className="text-[9px] font-black text-red-600 dark:text-red-400 uppercase">TFI</span>
+          </div>
+        )}
+        <h3 className="font-bold text-slate-900 dark:text-white truncate text-sm">{ticket.title}</h3>
+        <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
+          <Calendar className="w-3 h-3" />
+          {ticket.date}
+        </p>
+        <p className="text-xs text-slate-500 mt-1 flex items-center gap-1 truncate">
+          <MapPin className="w-3 h-3" />
+          {ticket.location}
+        </p>
+      </div>
+      <div className="flex items-center">
+        <QrCode className="w-8 h-8 text-orange-500 opacity-50 group-hover:opacity-100 transition-opacity" />
+      </div>
+    </div>
+
+    {/* Dashed divider */}
+    <div className="flex items-center px-4">
+      <div className="w-3 h-6 rounded-r-full bg-slate-50 dark:bg-[#0B1120] -ml-4 border-r border-slate-200 dark:border-white/10" />
+      <div className="flex-1 border-t border-dashed border-slate-200 dark:border-white/20 mx-2" />
+      <div className="w-3 h-6 rounded-l-full bg-slate-50 dark:bg-[#0B1120] -mr-4 border-l border-slate-200 dark:border-white/10" />
+    </div>
+
+    <div className="px-5 py-3 flex justify-between items-center bg-slate-50/50 dark:bg-white/5">
+      <div className="flex items-center gap-2">
+        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{ticket.ticketCode}</span>
+        {ticket.reward && (
+          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
+            ticket.isTFI 
+              ? "text-blue-500 bg-blue-50 dark:bg-blue-500/10" 
+              : "text-orange-500 bg-orange-50 dark:bg-orange-500/10"
+          }`}>
+            {ticket.reward}
+          </span>
+        )}
+      </div>
+      <span className="text-[10px] font-bold text-orange-600 dark:text-amber-400">TAP UNTUK QR</span>
+    </div>
+  </div>
+));
 export function MyTickets() {
   const navigate = useNavigate();
   const { setIsVisible } = useBottomNav();
@@ -12,9 +70,11 @@ export function MyTickets() {
   const [selectedTicket, setSelectedTicket] = useState<CampusEvent | null>(null);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [showToast, setShowToast] = useState(false);
+  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const upcomingTickets = getUpcomingEvents();
-  const pastTickets = getPastEvents();
+  const [upcomingTickets, setUpcomingTickets] = useState(() => getUpcomingEvents());
+  const [pastTickets] = useState(() => getPastEvents());
+  
   const filteredTickets = activeTab === "Upcoming" ? upcomingTickets : pastTickets;
 
   // Hide bottom nav when ticket modal opens, show when closed
@@ -24,13 +84,29 @@ export function MyTickets() {
     } else {
       setIsVisible(true);
     }
+    // Fix: Restore bottom nav on unmount to prevent global UI bug
+    return () => {
+      setIsVisible(true);
+    };
   }, [selectedTicket, setIsVisible]);
 
+  // Fix: Cleanup timeout on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    };
+  }, []);
+
   const handleCancelRSVP = () => {
+    if (selectedTicket) {
+      setUpcomingTickets(prev => prev.filter(t => t.id !== selectedTicket.id));
+    }
     setShowCancelConfirm(false);
     setSelectedTicket(null);
     setShowToast(true);
-    setTimeout(() => setShowToast(false), 3000);
+    
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    toastTimeoutRef.current = setTimeout(() => setShowToast(false), 3000);
   };
 
   return (
@@ -81,82 +157,26 @@ export function MyTickets() {
               className="space-y-6"
             >
               {filteredTickets.map((ticket) => (
-                <div
-                  key={ticket.id}
-                  onClick={() => setSelectedTicket(ticket)}
-                  className="relative flex flex-col bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-3xl overflow-hidden shadow-lg cursor-pointer group hover:-translate-y-1 transition-transform"
-                >
-                  <div className="flex p-4 gap-4">
-                    <div className="w-20 h-20 rounded-2xl overflow-hidden shrink-0">
-                      <img src={ticket.image} loading="lazy" className="w-full h-full object-cover" alt={ticket.title} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      {/* TFI Badge */}
-                      {ticket.isTFI && (
-                        <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-100 dark:bg-orange-500/20 rounded-md mb-1">
-                          <div className="w-1.5 h-1.5 bg-orange-500 rounded-full" />
-                          <span className="text-[9px] font-black text-orange-600 dark:text-orange-400 uppercase">TFI</span>
-                        </div>
-                      )}
-                      <h3 className="font-bold text-slate-900 dark:text-white truncate text-sm">{ticket.title}</h3>
-                      <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
-                        {ticket.date}
-                      </p>
-                      <p className="text-xs text-slate-500 mt-1 flex items-center gap-1 truncate">
-                        <MapPin className="w-3 h-3" />
-                        {ticket.location}
-                      </p>
-                    </div>
-                    <div className="flex items-center">
-                      <QrCode className="w-8 h-8 text-orange-500 opacity-50 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                  </div>
-
-                  {/* Dashed divider */}
-                  <div className="flex items-center px-4">
-                    <div className="w-3 h-6 rounded-r-full bg-slate-50 dark:bg-[#0B1120] -ml-4 border-r border-slate-200 dark:border-white/10" />
-                    <div className="flex-1 border-t border-dashed border-slate-200 dark:border-white/20 mx-2" />
-                    <div className="w-3 h-6 rounded-l-full bg-slate-50 dark:bg-[#0B1120] -mr-4 border-l border-slate-200 dark:border-white/10" />
-                  </div>
-
-                  <div className="px-5 py-3 flex justify-between items-center bg-slate-50/50 dark:bg-white/5">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{ticket.ticketCode}</span>
-                      {ticket.isTFI && (
-                        <span className="text-[10px] font-bold text-orange-500 bg-orange-50 dark:bg-orange-500/10 px-1.5 py-0.5 rounded-md">
-                          {ticket.reward}
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-[10px] font-bold text-orange-600 dark:text-amber-400">TAP UNTUK QR</span>
-                  </div>
-                </div>
+                <TicketCard 
+                  key={ticket.id} 
+                  ticket={ticket} 
+                  onClick={() => setSelectedTicket(ticket)} 
+                />
               ))}
             </motion.div>
           ) : (
-            <motion.div
+            <EmptyState
               key="empty"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="py-16 flex flex-col items-center justify-center text-center"
-            >
-              <div className="w-24 h-24 bg-white dark:bg-white/5 border border-slate-100 dark:border-white/10 rounded-full flex items-center justify-center mb-6 shadow-sm">
-                <Ticket className="w-12 h-12 text-slate-300 dark:text-slate-600" />
-              </div>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Belum Ada Tiket</h3>
-              <p className="text-slate-500 dark:text-slate-400 text-sm mb-8 px-8">
-                {activeTab === "Upcoming"
-                  ? "Kamu belum memiliki acara yang akan datang."
-                  : "Kamu belum memiliki acara yang telah selesai."}
-              </p>
-              <button
-                onClick={() => navigate('/app/explore')}
-                className="px-8 py-4 bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-500 font-bold rounded-2xl hover:bg-orange-100 transition-colors"
-              >
-                Cari Event Baru
-              </button>
-            </motion.div>
+              icon={Ticket}
+              title="Belum Ada Tiket"
+              description={activeTab === "Upcoming"
+                ? "Kamu belum memiliki acara yang akan datang."
+                : "Kamu belum memiliki acara yang telah selesai."}
+              action={{
+                label: "Cari Event Baru",
+                onClick: () => navigate('/app/explore')
+              }}
+            />
           )}
         </AnimatePresence>
       </main>
@@ -212,21 +232,52 @@ export function MyTickets() {
                       Batalkan RSVP
                     </button>
                   </>
-                ) : selectedTicket.isTFI ? (
-                  <div className="flex flex-col gap-2 px-1">
-                    <div className="p-3 bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/30 rounded-2xl">
-                      <p className="text-xs font-bold text-orange-600 dark:text-orange-400 mb-0.5">Klaim Comserv-mu!</p>
-                      <p className="text-[10px] text-slate-600 dark:text-slate-400">Isi paper refleksi untuk acara ini agar jam sosialmu masuk ke sistem.</p>
-                    </div>
-                    <button className="w-full py-3 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-bold rounded-2xl shadow-lg shadow-blue-500/30 hover:-translate-y-1 transition-transform flex items-center justify-center gap-2 text-sm">
-                      Tulis Refleksi di TFI
-                    </button>
-                  </div>
                 ) : (
-                  <div className="p-3 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 rounded-2xl text-center">
-                    <CheckCircle2 className="w-6 h-6 text-emerald-500 mx-auto mb-1" />
-                    <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">Acara Telah Selesai</p>
-                    <p className="text-[10px] text-slate-600 dark:text-slate-400">Terima kasih telah berpartisipasi!</p>
+                  <div className="space-y-4 flex flex-col w-full text-left">
+                    {/* TFI Reflection */}
+                    {selectedTicket.isTFI && (
+                      <div className="flex flex-col gap-2">
+                        <div className="p-3 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-2xl">
+                          <p className="text-xs font-bold text-red-600 dark:text-red-400 mb-0.5">Klaim Comserv-mu!</p>
+                          <p className="text-[10px] text-slate-600 dark:text-slate-400">Isi paper refleksi untuk acara ini agar jam sosialmu masuk ke sistem.</p>
+                        </div>
+                        <button className="w-full py-3 bg-gradient-to-r from-red-600 to-rose-500 text-white font-bold rounded-2xl shadow-lg shadow-red-500/30 hover:-translate-y-1 transition-transform flex items-center justify-center gap-2 text-sm">
+                          Tulis Refleksi di TFI
+                        </button>
+                      </div>
+                    )}
+                    
+                    {/* SAT Evaluation Survey */}
+                    {selectedTicket.rewards?.satPoints && (
+                      <div className="flex flex-col gap-2">
+                        {selectedTicket.evaluationCompleted ? (
+                          <div className="p-3 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 rounded-2xl flex flex-col items-center justify-center text-center gap-1">
+                            <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+                            <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">Poin SAT Telah Diklaim</p>
+                            <p className="text-[10px] text-slate-600 dark:text-slate-400">Evaluation Survey telah diisi.</p>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="p-3 bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/30 rounded-2xl">
+                              <p className="text-xs font-bold text-orange-600 dark:text-orange-400 mb-0.5">Klaim Poin SAT ({selectedTicket.rewards.satPoints})</p>
+                              <p className="text-[10px] text-slate-600 dark:text-slate-400">Isi evaluation survey terlebih dahulu agar poin SAT dapat dicairkan.</p>
+                            </div>
+                            <button className="w-full py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold rounded-2xl shadow-lg shadow-orange-500/30 hover:-translate-y-1 transition-transform flex items-center justify-center gap-2 text-sm">
+                              Isi Evaluation Survey
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Default Past Event state if neither TFI nor SAT */}
+                    {!selectedTicket.isTFI && !selectedTicket.rewards?.satPoints && (
+                      <div className="p-3 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 rounded-2xl text-center">
+                        <CheckCircle2 className="w-6 h-6 text-emerald-500 mx-auto mb-1" />
+                        <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">Acara Telah Selesai</p>
+                        <p className="text-[10px] text-slate-600 dark:text-slate-400">Terima kasih telah berpartisipasi!</p>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -236,47 +287,29 @@ export function MyTickets() {
       </AnimatePresence>
 
       {/* CANCEL CONFIRMATION POPUP */}
-      <AnimatePresence>
-        {showCancelConfirm && (
-          <div className="fixed inset-0 z-[70] flex items-center justify-center px-6">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
-              onClick={() => setShowCancelConfirm(false)}
-            />
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="relative bg-white dark:bg-slate-900 rounded-[2rem] p-8 w-full max-w-sm shadow-2xl border border-slate-100 dark:border-white/5"
-            >
-              <div className="w-16 h-16 bg-red-100 dark:bg-red-500/20 rounded-2xl flex items-center justify-center mb-6 border border-red-200 dark:border-red-500/30">
-                <AlertTriangle className="w-8 h-8 text-red-600 dark:text-red-500" />
-              </div>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Batalkan RSVP?</h3>
-              <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-8">
-                Jika dibatalkan, kuota Anda akan diberikan kepada mahasiswa lain. Anda yakin ingin membatalkan kehadiran?
-              </p>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowCancelConfirm(false)}
-                  className="flex-1 py-4 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-white font-bold rounded-2xl"
-                >
-                  Tidak
-                </button>
-                <button
-                  onClick={handleCancelRSVP}
-                  className="flex-1 py-4 bg-red-600 text-white font-bold rounded-2xl shadow-lg"
-                >
-                  Ya, Batal
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      <Modal isOpen={showCancelConfirm} onClose={() => setShowCancelConfirm(false)} size="sm">
+        <div className="w-16 h-16 bg-red-100 dark:bg-red-500/20 rounded-2xl flex items-center justify-center mb-6 border border-red-200 dark:border-red-500/30">
+          <AlertTriangle className="w-8 h-8 text-red-600 dark:text-red-500" />
+        </div>
+        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Batalkan RSVP?</h3>
+        <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-8">
+          Jika dibatalkan, kuota Anda akan diberikan kepada mahasiswa lain. Anda yakin ingin membatalkan kehadiran?
+        </p>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setShowCancelConfirm(false)}
+            className="flex-1 py-4 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-white font-bold rounded-2xl"
+          >
+            Tidak
+          </button>
+          <button
+            onClick={handleCancelRSVP}
+            className="flex-1 py-4 bg-red-600 text-white font-bold rounded-2xl shadow-lg"
+          >
+            Ya, Batal
+          </button>
+        </div>
+      </Modal>
 
       {/* TOAST NOTIFICATION */}
       <AnimatePresence>

@@ -2,7 +2,7 @@ import { useCallback, useMemo, useEffect, useRef, memo } from "react";
 import { Bell, Ticket, MapPin, Clock, ChevronRight } from "lucide-react";
 import { useNavigate, useOutletContext } from "react-router";
 import { getUpcomingEvents } from "../data/events";
-import { parseEventDate, formatEventMonth } from "../utils/date";
+import { parseEventDate, formatEventMonth, isEventWithinDays } from "../utils/date";
 import { SwipeBlockRef } from "../utils/types";
 import { useUser, useUserProgress } from "../contexts/UserContext";
 
@@ -35,7 +35,7 @@ const ProgressBar = memo(function ProgressBar({ current, max, label, gradientCla
       <div className="w-full h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden shadow-inner">
         <div
           className={`h-full bg-gradient-to-r ${gradientClass} rounded-full transition-all duration-300`}
-          style={{ width: `${percentage}%` }}
+          style={{ width: `${Math.min(100, Math.max(0, percentage))}%` }}
         />
       </div>
     </div>
@@ -64,6 +64,7 @@ const EventCard = memo(function EventCard({ id, title, image, location, reward, 
         src={image}
         alt={`${title} at ${location}`}
         loading="lazy"
+        draggable={false}
         className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-[#0B1120] via-[#0B1120]/60 to-transparent" />
@@ -158,12 +159,11 @@ export function Dashboard() {
 
   // Memoize upcoming events to avoid redundant filtering
   const upcomingEvents = useMemo(() => getUpcomingEvents(), []);
-  const nextEvent = upcomingEvents[0];
-
-  // Memoize touch handlers with proper cleanup
-  const handleCarouselTouchStart = useCallback(() => {
-    blockSwipeRef.current = true;
-  }, [blockSwipeRef]);
+  
+  // Find all events that are within 7 days
+  const nextEvents = useMemo(() => {
+    return upcomingEvents.filter(event => isEventWithinDays(event.date, 7));
+  }, [upcomingEvents]);
 
   // Store timeout ID for cleanup
   const swipeResetTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -179,11 +179,117 @@ export function Dashboard() {
     }, 100);
   }, [blockSwipeRef]);
 
+  // Drag to scroll for PC/Laptop
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+  const hasDragged = useRef(false);
+  const startX = useRef(0);
+  const scrollLeft = useRef(0);
+  
+  // Ref for velocity tracking
+  const lastClientX = useRef(0);
+  const lastTime = useRef(0);
+  const velocity = useRef(0);
+  const scrollSnapTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    // Always block page swipe when interacting with carousel
+    blockSwipeRef.current = true;
+    e.stopPropagation();
+
+    // Fix: clear any existing scroll snap timeout
+    if (scrollSnapTimeout.current) {
+      clearTimeout(scrollSnapTimeout.current);
+    }
+
+    // Only apply custom drag for mouse, let native scrolling handle touch
+    if (e.pointerType !== 'mouse') return;
+    if (e.buttons !== 1) return;
+    
+    isDragging.current = true;
+    hasDragged.current = false;
+    if (carouselRef.current) {
+      startX.current = e.pageX - carouselRef.current.offsetLeft;
+      scrollLeft.current = carouselRef.current.scrollLeft;
+      carouselRef.current.style.scrollSnapType = 'none';
+      carouselRef.current.style.cursor = 'grabbing';
+      
+      // Initialize velocity tracking
+      lastClientX.current = e.clientX;
+      lastTime.current = performance.now();
+      velocity.current = 0;
+    }
+  }, [blockSwipeRef]);
+
+  const handlePointerMove = useCallback((e: React.PointerEvent) => {
+    // Only apply custom drag for mouse
+    if (e.pointerType !== 'mouse') return;
+    
+    if (!isDragging.current || !carouselRef.current) return;
+    const x = e.pageX - carouselRef.current.offsetLeft;
+    const walk = (x - startX.current) * 1;
+    if (Math.abs(walk) > 5) {
+      hasDragged.current = true;
+      e.preventDefault(); // prevent text selection while dragging
+    }
+    carouselRef.current.scrollLeft = scrollLeft.current - walk;
+
+    // Calculate velocity
+    const now = performance.now();
+    const dt = now - lastTime.current;
+    if (dt > 0) {
+      const dx = e.clientX - lastClientX.current;
+      velocity.current = dx / dt; // pixels per ms
+    }
+    lastClientX.current = e.clientX;
+    lastTime.current = now;
+  }, []);
+
+  const handlePointerUp = useCallback((e: React.PointerEvent) => {
+    if (e.pointerType === 'mouse') {
+      isDragging.current = false;
+      if (carouselRef.current) {
+        carouselRef.current.style.cursor = '';
+        
+        // Fix: If cursor stopped moving for > 50ms before release, reset velocity
+        if (performance.now() - lastTime.current > 50) {
+          velocity.current = 0;
+        }
+
+        // Apply momentum if velocity is significant
+        if (Math.abs(velocity.current) > 0.3) {
+          const throwDistance = velocity.current * 200; // Multiplier for throw distance
+          
+          carouselRef.current.scrollTo({
+            left: carouselRef.current.scrollLeft - throwDistance,
+            behavior: 'smooth'
+          });
+          
+          // Delay restoring snap so smooth scroll can finish
+          if (scrollSnapTimeout.current) {
+            clearTimeout(scrollSnapTimeout.current);
+          }
+          scrollSnapTimeout.current = setTimeout(() => {
+            if (carouselRef.current && !isDragging.current) {
+              carouselRef.current.style.scrollSnapType = 'x mandatory';
+            }
+          }, 400);
+        } else {
+          carouselRef.current.style.scrollSnapType = 'x mandatory';
+        }
+      }
+    }
+    handleCarouselTouchEnd();
+  }, [handleCarouselTouchEnd]);
+
   // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
       if (swipeResetTimeout.current) {
         clearTimeout(swipeResetTimeout.current);
+      }
+      if (scrollSnapTimeout.current) {
+        clearTimeout(scrollSnapTimeout.current);
       }
     };
   }, []);
@@ -268,10 +374,25 @@ export function Dashboard() {
             </button>
           </div>
           <div
-            className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide -mx-6 px-6"
-            onTouchStart={handleCarouselTouchStart}
-            onTouchMove={handleCarouselTouchStart}
-            onTouchEnd={handleCarouselTouchEnd}
+            ref={carouselRef}
+            className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide -mx-6 px-6 cursor-grab"
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerLeave={handlePointerUp}
+            onPointerCancel={handlePointerUp}
+            onTouchStart={(e) => {
+              blockSwipeRef.current = true;
+              e.stopPropagation();
+            }}
+            onTouchMove={(e) => e.stopPropagation()}
+            onTouchEnd={(e) => e.stopPropagation()}
+            onTouchCancel={(e) => e.stopPropagation()}
+            onClickCapture={(e) => {
+              if (hasDragged.current) {
+                e.stopPropagation();
+              }
+            }}
           >
             {upcomingEvents.map((event) => (
               <EventCard
@@ -291,7 +412,15 @@ export function Dashboard() {
         {/* Upcoming Schedule */}
         <section>
           <h2 className="text-lg font-bold mb-4 text-slate-900 dark:text-white">Jadwal Terdekatmu</h2>
-          <UpcomingSchedule event={nextEvent} onNavigate={navigate} />
+          <div className="space-y-3">
+            {nextEvents.length > 0 ? (
+              nextEvents.map(event => (
+                <UpcomingSchedule key={event.id} event={event} onNavigate={navigate} />
+              ))
+            ) : (
+              <UpcomingSchedule event={undefined} onNavigate={navigate} />
+            )}
+          </div>
         </section>
       </main>
     </div>

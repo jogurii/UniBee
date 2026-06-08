@@ -3,6 +3,9 @@
  * Centralizes all date manipulation logic to avoid duplication across components
  */
 
+// Tanggal timeline pada prototipe ditetapkan ke 15 Mei 2026
+const PROTOTYPE_DATE = new Date(2026, 4, 15);
+
 export interface ParsedDate {
   day: number;
   month: string;
@@ -22,7 +25,7 @@ export function parseEventDate(dateString: string): ParsedDate {
   const parts = dateString.trim().split(" ");
   const day = parseInt(parts[0], 10);
   const month = parts[1] || "Mei";
-  const year = parts[2] || new Date().getFullYear().toString();
+  const year = parts[2] || PROTOTYPE_DATE.getFullYear().toString();
 
   return { day, month, fullMonth: `${month} ${year}` };
 }
@@ -44,10 +47,10 @@ export function formatEventMonth(month: string): string {
 export function isEventPast(dateString: string): boolean {
   const { day, month } = parseEventDate(dateString);
   const monthIndex = getMonthIndex(month);
-  const currentYear = new Date().getFullYear();
+  const currentYear = PROTOTYPE_DATE.getFullYear();
 
   const eventDate = new Date(currentYear, monthIndex, day);
-  const today = new Date();
+  const today = new Date(PROTOTYPE_DATE);
   today.setHours(0, 0, 0, 0);
 
   return eventDate < today;
@@ -75,4 +78,25 @@ function getMonthIndex(month: string): number {
   };
 
   return months[month] ?? 4; // Default to May (Mei)
+}
+
+/**
+ * Check if an event date is within a certain number of days from today
+ * @param dateString - Date string in Indonesian format
+ * @param days - Number of days
+ * @returns boolean
+ */
+export function isEventWithinDays(dateString: string, days: number): boolean {
+  const { day, month } = parseEventDate(dateString);
+  const monthIndex = getMonthIndex(month);
+  const currentYear = PROTOTYPE_DATE.getFullYear();
+
+  const eventDate = new Date(currentYear, monthIndex, day);
+  const today = new Date(PROTOTYPE_DATE);
+  today.setHours(0, 0, 0, 0);
+
+  const differenceInTime = eventDate.getTime() - today.getTime();
+  const differenceInDays = differenceInTime / (1000 * 3600 * 24);
+
+  return differenceInDays >= 0 && differenceInDays <= days;
 }

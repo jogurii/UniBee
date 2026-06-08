@@ -14,6 +14,7 @@ export function Explore() {
   const navigate = useNavigate();
 
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const [activeFilter, setActiveFilter] = useState("Semua");
   const lastScrollY = useRef(0);
   const ticking = useRef(false);
 
@@ -101,13 +102,22 @@ export function Explore() {
         </div>
 
         <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
-          <button className="touch-target px-4 py-1.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-full text-xs font-semibold whitespace-nowrap shadow-lg shadow-orange-500/30">Semua</button>
-          <button className="touch-target px-4 py-1.5 bg-white/10 border border-white/20 text-white rounded-full text-xs font-medium whitespace-nowrap hover:bg-white/20 flex items-center gap-1.5">
-            <div className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse shadow-[0_0_5px_rgba(249,115,22,1)]" />
-            TFI Comserv
-          </button>
-          <button className="touch-target px-4 py-1.5 bg-white/10 border border-white/20 text-slate-200 rounded-full text-xs font-medium whitespace-nowrap hover:bg-white/20">SAT Points</button>
-          <button className="touch-target px-4 py-1.5 bg-white/10 border border-white/20 text-slate-200 rounded-full text-xs font-medium whitespace-nowrap hover:bg-white/20">Seminar</button>
+          {["Semua", "TFI Verified", "SAT Points", "ComServ"].map((filter) => (
+            <button
+              key={filter}
+              onClick={() => setActiveFilter(filter)}
+              className={`touch-target px-4 py-1.5 rounded-full text-xs whitespace-nowrap transition-all ${
+                activeFilter === filter
+                  ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white font-semibold shadow-lg shadow-orange-500/30 border border-transparent"
+                  : "bg-white/10 border border-white/20 text-slate-200 font-medium hover:bg-white/20"
+              } ${filter === "TFI Verified" ? "flex items-center gap-1.5" : ""}`}
+            >
+              {filter === "TFI Verified" && (
+                <div className={`w-1.5 h-1.5 rounded-full animate-pulse shadow-[0_0_5px_rgba(239,68,68,1)] ${activeFilter === filter ? 'bg-white' : 'bg-red-400'}`} />
+              )}
+              {filter}
+            </button>
+          ))}
         </div>
       </header>
 
@@ -135,10 +145,17 @@ export function Explore() {
 
                   {event.isTFI && (
                     <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-md border border-white/40 text-slate-900 px-3 py-1.5 rounded-xl flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest shadow-xl">
-                      <div className="bg-gradient-to-tr from-orange-500 to-amber-400 p-0.5 rounded-full shadow-sm">
+                      <div className="bg-gradient-to-tr from-red-600 to-rose-500 p-0.5 rounded-full shadow-sm">
                         <CheckCircle className="w-3 h-3 text-white" />
                       </div>
                       TFI Verified
+                    </div>
+                  )}
+
+                  {event.status === "Past" && (
+                    <div className="absolute top-4 right-4 bg-slate-900/80 backdrop-blur-md border border-slate-700/50 text-white px-3 py-1.5 rounded-xl flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest shadow-xl">
+                      <CheckCircle className="w-3 h-3 text-emerald-400" />
+                      Selesai
                     </div>
                   )}
 

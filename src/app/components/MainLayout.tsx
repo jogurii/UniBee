@@ -8,7 +8,7 @@ import { Outlet, useNavigate, useLocation } from "react-router";
 import { Home, Compass, Ticket, Calendar, User } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { BottomNavProvider, useBottomNav } from "../contexts/BottomNavContext";
-import { PAGES, getPageIndex, ANIMATION_CONFIG, SWIPE_CONFIG, pageVariants } from "./MainLayout.config";
+import { PAGES, getPageIndex, ANIMATION_CONFIG, pageVariants } from "./MainLayout.config";
 
 // ============================================
 // Sub-components (memoized for performance)
@@ -72,61 +72,17 @@ function MainLayoutContent() {
   const path = location.pathname;
   const { isVisible, setIsVisible } = useBottomNav();
 
-  const [direction, setDirection] = useState(1);
-
+  const direction = location.state?.direction ?? 1;
   const activeIndex = getPageIndex(path);
-  const touchOrigin = useRef<{ x: number; y: number } | null>(null);
-  const swipeLocked = useRef(false);
+  // Dummy ref kept to prevent crashes in child components that useOutletContext
   const blockSwipeRef = useRef(false);
 
-  // Update animation key and reset nav visibility on route change
+  // Reset nav visibility on route change
   useEffect(() => {
-    window.scrollTo(0, 0);
     setIsVisible(true);
   }, [path, setIsVisible]);
 
-  // Touch handlers for swipe navigation
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    touchOrigin.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-    swipeLocked.current = false;
-  }, []);
 
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!touchOrigin.current || swipeLocked.current) return;
-    const dx = e.touches[0].clientX - touchOrigin.current.x;
-    const dy = e.touches[0].clientY - touchOrigin.current.y;
-    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > SWIPE_CONFIG.LOCK_THRESHOLD) {
-      swipeLocked.current = true;
-    }
-  }, []);
-
-  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    if (!touchOrigin.current) return;
-
-    const endX = e.changedTouches[0].clientX;
-    const delta = endX - touchOrigin.current.x;
-
-    if (swipeLocked.current && !blockSwipeRef.current) {
-      if (delta < -SWIPE_CONFIG.THRESHOLD) {
-        // Swipe LEFT → go forward (to higher index page)
-        if (activeIndex < PAGES.length - 1) {
-          setDirection(1);
-          navigate(PAGES[activeIndex + 1]);
-        }
-      } else if (delta > SWIPE_CONFIG.THRESHOLD) {
-        // Swipe RIGHT → go backward (to lower index page)
-        if (activeIndex > 0) {
-          setDirection(-1);
-          navigate(PAGES[activeIndex - 1]);
-        }
-      }
-    }
-
-    touchOrigin.current = null;
-    swipeLocked.current = false;
-    // Reset block after short delay
-    setTimeout(() => { blockSwipeRef.current = false; }, 100);
-  }, [activeIndex, navigate]);
 
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -135,34 +91,35 @@ function MainLayoutContent() {
   // Navigation handlers
   const handleNavClick = useCallback((targetIndex: number) => {
     if (activeIndex !== targetIndex) {
-      setDirection(targetIndex > activeIndex ? 1 : -1);
-      navigate(PAGES[targetIndex]);
+      const newDirection = targetIndex > activeIndex ? 1 : -1;
+      navigate(PAGES[targetIndex], { state: { direction: newDirection } });
     }
   }, [activeIndex, navigate]);
 
   return (
     <div
-      className="relative min-h-screen bg-slate-50 dark:bg-[#0B1120] select-none pf-page"
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
+      className="absolute inset-0 w-full h-full bg-slate-50 dark:bg-[#0B1120] select-none pf-page overflow-hidden flex flex-col"
       onContextMenu={handleContextMenu}
     >
       {/* Page Content - Animated with Framer Motion for directional sliding */}
-      <AnimatePresence mode="popLayout" custom={direction} initial={false}>
-        <motion.div
-          key={path}
-          custom={direction}
-          variants={pageVariants}
-          initial="enter"
-          animate="center"
-          exit="exit"
-          transition={ANIMATION_CONFIG.PAGE_TRANSITION}
-          className="pf-content"
-        >
-          <Outlet context={{ blockSwipeRef }} />
-        </motion.div>
-      </AnimatePresence>
+      <motion.div 
+        className="relative flex-1 w-full overflow-hidden"
+      >
+        <AnimatePresence mode="popLayout" custom={direction} initial={false}>
+          <motion.div
+            key={path}
+            custom={direction}
+            variants={pageVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={ANIMATION_CONFIG.PAGE_TRANSITION}
+            className="pf-content absolute inset-0 w-full h-full overflow-y-auto overscroll-y-contain"
+          >
+            <Outlet context={{ blockSwipeRef }} />
+          </motion.div>
+        </AnimatePresence>
+      </motion.div>
 
       {/* Bottom Navigation Bar */}
       <AnimatePresence initial={false}>
@@ -172,7 +129,7 @@ function MainLayoutContent() {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
             transition={ANIMATION_CONFIG.SPRING}
-            className="fixed bottom-0 left-0 w-full bg-white/95 dark:bg-[#0B1120]/80 backdrop-blur-xl border-t border-slate-200 dark:border-white/10 px-6 py-4 flex justify-between items-center z-[100] pb-safe shadow-[0_-10px_30px_rgba(0,0,0,0.05)] pf-nav"
+            className="relative shrink-0 w-full bg-white/95 dark:bg-[#0B1120]/80 backdrop-blur-xl border-t border-slate-200 dark:border-white/10 px-6 py-4 flex justify-between items-center z-[100] pb-safe shadow-[0_-10px_30px_rgba(0,0,0,0.05)] pf-nav"
             aria-label="Main navigation"
           >
             <NavButton

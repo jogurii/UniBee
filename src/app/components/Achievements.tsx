@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router";
 import type { ProgressRingProps } from "../utils/types";
+import { useUserProgress } from "../contexts/UserContext";
 
 // ProgressRing constants - moved outside component for stability
 const RING_RADIUS = 70;
@@ -40,10 +41,10 @@ const ProgressRing = memo(function ProgressRing({ percentage, color, label, valu
   );
 
   return (
-    <div className="flex flex-col items-center">
-      <div className="relative w-40 h-40 flex items-center justify-center">
+    <div className="flex flex-col items-center w-full">
+      <div className="relative w-full max-w-[8.5rem] sm:max-w-[10rem] aspect-square flex items-center justify-center">
         {/* Lingkaran Background - Dikunci warnanya agar terlihat elegan di atas Navy */}
-        <svg className="w-full h-full transform -rotate-90">
+        <svg viewBox="0 0 160 160" className="w-full h-full transform -rotate-90">
           <circle cx="80" cy="80" r={RING_RADIUS} stroke="currentColor" strokeWidth="12" fill="transparent" className="text-white/10" />
           {/* Lingkaran Progress */}
           <motion.circle
@@ -54,13 +55,13 @@ const ProgressRing = memo(function ProgressRing({ percentage, color, label, valu
         </svg>
         {/* Teks Tengah - Dikunci warna putih dengan efek drop-shadow agar kontras maksimal */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-3xl font-black text-white leading-none drop-shadow-md">{percentage}%</span>
-          <span className="text-[10px] font-bold text-slate-300 uppercase tracking-tighter mt-1">{label}</span>
+          <span className="text-2xl sm:text-3xl font-black text-white leading-none drop-shadow-md">{percentage}%</span>
+          <span className="text-[9px] sm:text-[10px] font-bold text-slate-300 uppercase tracking-tighter mt-1 truncate px-2 text-center w-full">{label}</span>
         </div>
       </div>
       <div className="mt-4 text-center">
-        <p className="text-sm font-black text-white drop-shadow-sm">{value}</p>
-        <p className="text-[10px] font-medium text-slate-400">{subValue}</p>
+        <p className="text-xs sm:text-sm font-black text-white drop-shadow-sm">{value}</p>
+        <p className="text-[9px] sm:text-[10px] font-medium text-slate-400">{subValue}</p>
       </div>
     </div>
   );
@@ -69,19 +70,26 @@ const ProgressRing = memo(function ProgressRing({ percentage, color, label, valu
 export function Achievements() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("Overview");
+  const { sat, comserv } = useUserProgress();
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0B1120] text-slate-900 dark:text-white pb-24 overflow-y-scroll overflow-x-hidden w-full relative full-h-screen">
 
       {/* HEADER DENGAN PERBAIKAN TRANSISI SEAMLESS */}
-      <header className="px-6 pb-6 rounded-b-[2.5rem] shadow-lg relative z-20 bg-[#0B1120] overflow-hidden">
+      <header className="px-6 pb-6 pt-10 rounded-b-[2.5rem] shadow-lg relative z-20 bg-[#0B1120] overflow-hidden">
         
-        {/* Lapisan Gradient Biru (TFI) yang muncul/hilang dengan animasi Fade */}
+        {/* Lapisan Gradient (SAT Points & ComServ) yang muncul/hilang dengan animasi Fade */}
         <motion.div 
           initial={false}
-          animate={{ opacity: activeTab === 'TFI Comserv' ? 1 : 0 }}
+          animate={{ opacity: activeTab === 'ComServ' ? 1 : 0 }}
           transition={{ duration: 0.5, ease: "easeInOut" }}
           className="absolute inset-0 bg-gradient-to-br from-[#0B1120] to-blue-800/90 z-0 pointer-events-none"
+        />
+        <motion.div 
+          initial={false}
+          animate={{ opacity: activeTab === 'SAT Points' ? 1 : 0 }}
+          transition={{ duration: 0.5, ease: "easeInOut" }}
+          className="absolute inset-0 bg-gradient-to-br from-[#0B1120] to-orange-800/90 z-0 pointer-events-none"
         />
 
         {/* Konten Header (Z-10 agar selalu berada di atas efek background) */}
@@ -95,7 +103,15 @@ export function Achievements() {
 
           {/* TAB NAVIGATION */}
           <div className="flex bg-white/10 p-1.5 rounded-2xl border border-white/10 relative mb-8 backdrop-blur-md">
-            {["Overview", "SAT Points", "TFI Comserv"].map((tab) => (
+            <motion.div 
+              className={`absolute top-1.5 bottom-1.5 rounded-xl z-0 ${activeTab === 'ComServ' ? 'bg-blue-600' : activeTab === 'SAT Points' ? 'bg-gradient-to-r from-orange-600 to-amber-500' : 'bg-slate-700'}`}
+              animate={{ 
+                left: activeTab === "Overview" ? "6px" : activeTab === "SAT Points" ? "calc(33.33% + 2px)" : "calc(66.66% - 2px)", 
+                width: "calc(33.33% - 4px)" 
+              }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            />
+            {["Overview", "SAT Points", "ComServ"].map((tab) => (
               <button 
                 key={tab} 
                 onClick={() => setActiveTab(tab)} 
@@ -104,14 +120,6 @@ export function Achievements() {
                 {tab}
               </button>
             ))}
-            <motion.div 
-              className={`absolute top-1.5 bottom-1.5 rounded-xl z-0 ${activeTab === 'TFI Comserv' ? 'bg-blue-600' : 'bg-gradient-to-r from-orange-600 to-amber-500'}`}
-              animate={{ 
-                x: activeTab === "Overview" ? "0%" : activeTab === "SAT Points" ? "100%" : "200%", 
-                width: "33.33%" 
-              }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            />
           </div>
 
           {/* PROGRESS RINGS CONTAINER */}
@@ -121,13 +129,13 @@ export function Achievements() {
               initial={{ opacity: 0, y: 10 }} 
               animate={{ opacity: 1, y: 0 }} 
               exit={{ opacity: 0, y: -10 }} 
-              className={`grid gap-4 bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-[2rem] shadow-xl ${activeTab === 'Overview' ? 'grid-cols-2' : 'grid-cols-1 max-w-xs mx-auto'}`}
+              className={`grid gap-2 sm:gap-4 bg-white/5 backdrop-blur-xl border border-white/10 p-4 sm:p-6 rounded-[2rem] shadow-xl ${activeTab === 'Overview' ? 'grid-cols-2' : 'grid-cols-1 max-w-[14rem] mx-auto'}`}
             >
               {(activeTab === "Overview" || activeTab === "SAT Points") && (
-                <ProgressRing percentage={70} color="#f97316" label="SAT Points" value="85 / 120" subValue="Sisa 35 Poin" />
+                <ProgressRing percentage={sat.percentage} color="#f97316" label="SAT Points" value={`${sat.current} / ${sat.max}`} subValue={`Sisa ${sat.remaining} Poin`} />
               )}
-              {(activeTab === "Overview" || activeTab === "TFI Comserv") && (
-                <ProgressRing percentage={50} color={activeTab === 'TFI Comserv' ? "#06b6d4" : "#3b82f6"} label="Comserv" value="15 / 30 Jam" subValue="Sisa 15 Jam" />
+              {(activeTab === "Overview" || activeTab === "ComServ") && (
+                <ProgressRing percentage={comserv.percentage} color={activeTab === 'ComServ' ? "#06b6d4" : "#3b82f6"} label="Comserv" value={`${comserv.current} / ${comserv.max} Jam`} subValue={`Sisa ${comserv.remaining} Jam`} />
               )}
             </motion.div>
           </AnimatePresence>
@@ -137,7 +145,7 @@ export function Achievements() {
       <main className="px-6 py-10 space-y-10 pb-32">
         
         {/* DIAGRAM SAT POINTS */}
-        {activeTab !== "TFI Comserv" && (
+        {activeTab !== "ComServ" && (
           <section>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-bold flex items-center gap-2">
@@ -170,15 +178,15 @@ export function Achievements() {
         {/* HISTORY LIST */}
         <section>
           <h2 className="text-lg font-bold mb-6 flex items-center gap-2">
-            {activeTab === "TFI Comserv" ? <HeartHandshake className="w-5 h-5 text-cyan-500" /> : <Award className="w-5 h-5 text-blue-500" />}
-            {activeTab === "TFI Comserv" ? "Portofolio Sosial (TFI)" : "Riwayat Aktivitas"}
+            {activeTab === "ComServ" ? <HeartHandshake className="w-5 h-5 text-blue-500" /> : activeTab === "SAT Points" ? <Award className="w-5 h-5 text-orange-500" /> : <Award className="w-5 h-5 text-slate-500" />}
+            {activeTab === "ComServ" ? "Portofolio Sosial (TFI)" : activeTab === "SAT Points" ? "Riwayat Aktivitas SAT" : "Riwayat Aktivitas"}
           </h2>
 
           <div className="space-y-4">
             {ACTIVITIES
  // Logika Filter
             .filter(item => {
-              if (activeTab === "TFI Comserv") return item.isTFI;
+              if (activeTab === "ComServ") return item.isTFI;
               if (activeTab === "SAT Points") return !item.isTFI;
               return true; // Untuk tab "Overview" tampilkan semua
             })

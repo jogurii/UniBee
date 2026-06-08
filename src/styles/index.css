@@ -21,13 +21,12 @@ html {
   font-size: 16px;
   -webkit-text-size-adjust: 100%;
   -webkit-font-smoothing: antialiased;
+  overscroll-behavior-x: none;
 }
 
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  overscroll-behavior: none;
-  overscroll-behavior-y: contain;
-  touch-action: manipulation;
+  overscroll-behavior-y: none; /* Often better than contain for custom pull-to-refresh */
   user-select: none;
   -webkit-user-select: none;
 }
@@ -544,8 +543,8 @@ body {
    19. UTILITY CLASSES
    ============================================ */
 .full-h-screen {
-  height: 100vh;
-  height: 100dvh; /* Dynamic viewport height untuk mobile */
+  min-height: 100vh;
+  min-height: 100dvh; /* Dynamic viewport height untuk mobile */
 }
 
 .no-scrollbar {
@@ -632,15 +631,14 @@ body {
 .phone-screen {
   width: 100%;
   height: 100%;
-  min-height: 100dvh;
   overflow: hidden;
   position: relative;
 }
 
-/* Mobile: allow scroll on phone-screen */
+/* Mobile: allow scroll on phone-screen only if needed, but pf-content handles it now */
 @media (max-width: 767px) {
   .phone-screen {
-    overflow-y: auto;
+    min-height: 100dvh;
     -webkit-overflow-scrolling: touch;
   }
 }
@@ -771,6 +769,7 @@ body {
     flex-shrink: 0;
     z-index: 1;
     transition: box-shadow 0.3s ease;
+    transform: translateZ(0); /* Create containing block for fixed position elements */
   }
 
   .phone-frame:hover {

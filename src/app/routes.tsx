@@ -1,23 +1,12 @@
 /**
  * Application Router Configuration
- * React Router 7 with static imports
- * Note: Lazy loading can be implemented via Vite's build config (build.rollupOptions.input)
+ * React Router 7 with lazy loading
  */
 
 import { createBrowserRouter } from "react-router";
 import { Root } from "./components/Root";
 import { MainLayout } from "./components/MainLayout";
 import { SplashScreen } from "./components/SplashScreen";
-import { LoginPage } from "./components/LoginPage";
-import { Dashboard } from "./components/Dashboard";
-import { Explore } from "./components/Explore";
-import { EventDetail } from "./components/EventDetail";
-import { MyTickets } from "./components/MyTickets";
-import { Achievements } from "./components/Achievements";
-import { CommitteeScanner } from "./components/CommitteeScanner";
-import { Notifications } from "./components/Notifications";
-import { Profile } from "./components/Profile";
-import { Schedule } from "./components/Schedule";
 
 export const router = createBrowserRouter(
   [
@@ -26,24 +15,24 @@ export const router = createBrowserRouter(
       Component: Root,
       children: [
         { index: true, Component: SplashScreen },
-        { path: "login", Component: LoginPage },
+        { path: "login", lazy: async () => { const m = await import("./components/LoginPage"); return { Component: m.LoginPage }; } },
 
         // Full-screen routes (no bottom nav)
-        { path: "event/:id", Component: EventDetail },
-        { path: "scanner", Component: CommitteeScanner },
-        { path: "notifications", Component: Notifications },
+        { path: "event/:id", lazy: async () => { const m = await import("./components/EventDetail"); return { Component: m.EventDetail }; } },
+        { path: "scanner", lazy: async () => { const m = await import("./components/CommitteeScanner"); return { Component: m.CommitteeScanner }; } },
+        { path: "notifications", lazy: async () => { const m = await import("./components/Notifications"); return { Component: m.Notifications }; } },
 
         // Main layout routes (with bottom nav) — unique path avoids conflict
         {
           path: "app",
           Component: MainLayout,
           children: [
-            { index: true, Component: Dashboard },
-            { path: "explore", Component: Explore },
-            { path: "tickets", Component: MyTickets },
-            { path: "schedule", Component: Schedule },
-            { path: "profile", Component: Profile },
-            { path: "achievements", Component: Achievements },
+            { index: true, lazy: async () => { const m = await import("./components/Dashboard"); return { Component: m.Dashboard }; } },
+            { path: "explore", lazy: async () => { const m = await import("./components/Explore"); return { Component: m.Explore }; } },
+            { path: "tickets", lazy: async () => { const m = await import("./components/MyTickets"); return { Component: m.MyTickets }; } },
+            { path: "schedule", lazy: async () => { const m = await import("./components/Schedule"); return { Component: m.Schedule }; } },
+            { path: "profile", lazy: async () => { const m = await import("./components/Profile"); return { Component: m.Profile }; } },
+            { path: "achievements", lazy: async () => { const m = await import("./components/Achievements"); return { Component: m.Achievements }; } },
           ],
         },
       ],

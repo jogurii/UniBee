@@ -51,6 +51,7 @@ export interface CampusEvent {
   quotaTotal: number;
   status: EventStatus;
   ticketCode: string;
+  evaluationCompleted?: boolean;
 }
 
 // ============================================

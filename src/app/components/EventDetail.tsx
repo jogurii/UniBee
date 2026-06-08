@@ -34,7 +34,8 @@ export function EventDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const event = getEventById(id);
-  const [registered, setRegistered] = useState(false);
+  // Default to registered for "Global IT Trend Seminar" (ID 5)
+  const [registered, setRegistered] = useState(id === "5");
 
   if (!event) {
     return (
@@ -54,11 +55,12 @@ export function EventDetail() {
   }
 
   const quotaPercent = Math.round((event.quotaRemaining / event.quotaTotal) * 100);
-  const isLowQuota = quotaPercent <= 20;
+  const isFullQuota = event.quotaRemaining === 0;
+  const isLowQuota = !isFullQuota && quotaPercent <= 20;
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.mapsQuery)}`;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#0B1120] pb-24 overflow-x-hidden full-h-screen">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#0B1120] pb-36 overflow-x-hidden full-h-screen">
 
       {/* HEADER IMAGE & BADGE */}
       <div className="relative h-72 sm:h-80 w-full">
@@ -74,7 +76,7 @@ export function EventDetail() {
         </button>
         {event.isTFI && (
           <div className="absolute top-12 right-6 bg-white/95 border border-white/40 text-slate-900 px-3 py-1.5 rounded-xl flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest shadow-xl">
-            <div className="bg-gradient-to-tr from-orange-500 to-amber-400 p-0.5 rounded-full">
+            <div className="bg-gradient-to-tr from-red-600 to-rose-500 p-0.5 rounded-full">
               <CheckCircle2 className="w-3 h-3 text-white" />
             </div>
             TFI Verified
@@ -96,10 +98,10 @@ export function EventDetail() {
           
           {/* IDE 1: INTEGRASI KOTAK INFO TFI */}
           {event.isTFI && (
-            <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 rounded-2xl p-4 mb-5 flex gap-3 items-start shadow-sm">
-              <HeartHandshake className="w-6 h-6 text-blue-500 shrink-0 mt-0.5" />
+            <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-2xl p-4 mb-5 flex gap-3 items-start shadow-sm">
+              <HeartHandshake className="w-6 h-6 text-red-500 shrink-0 mt-0.5" />
               <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                <strong className="text-blue-700 dark:text-blue-400 block mb-0.5">Acara Resmi TFI</strong>
+                <strong className="text-red-700 dark:text-red-400 block mb-0.5">Acara Resmi TFI</strong>
                 Acara ini diselenggarakan langsung oleh Teach For Indonesia. Jangan lupa mengisi form refleksi di akhir acara untuk mengklaim jam Comserv-mu.
               </p>
             </div>
@@ -171,20 +173,24 @@ export function EventDetail() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.35 }}
-          className={`rounded-3xl p-6 border shadow-md ${isLowQuota ? "bg-red-500/5 border-red-500/30" : "bg-white dark:bg-white/5 border-slate-200 dark:border-white/10"}`}
+          className={`rounded-3xl p-6 border shadow-md ${isFullQuota ? "bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10" : isLowQuota ? "bg-red-500/5 border-red-500/30" : "bg-white dark:bg-white/5 border-slate-200 dark:border-white/10"}`}
         >
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <Users className={`w-5 h-5 ${isLowQuota ? "text-red-500" : "text-slate-500"}`} />
+              <Users className={`w-5 h-5 ${isFullQuota ? "text-slate-400" : isLowQuota ? "text-red-500" : "text-slate-500"}`} />
               <h2 className="text-sm font-bold text-slate-900 dark:text-white">Kuota Peserta</h2>
             </div>
-            {isLowQuota && (
+            {isFullQuota ? (
+              <span className="px-2.5 py-1 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-[10px] font-black uppercase rounded-lg">
+                Kuota Penuh
+              </span>
+            ) : isLowQuota ? (
               <span className="px-2.5 py-1 bg-red-500/15 text-red-600 text-[10px] font-black uppercase rounded-lg animate-pulse">
                 Segera Penuh!
               </span>
-            )}
+            ) : null}
           </div>
-          <p className={`text-lg font-bold mb-3 ${isLowQuota ? "text-red-600" : "text-slate-900 dark:text-white"}`}>
+          <p className={`text-lg font-bold mb-3 ${isFullQuota ? "text-slate-500 dark:text-slate-400" : isLowQuota ? "text-red-600" : "text-slate-900 dark:text-white"}`}>
             Sisa {event.quotaRemaining} dari {event.quotaTotal} Kuota
           </p>
           <div className="w-full h-3 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
@@ -192,17 +198,17 @@ export function EventDetail() {
               initial={{ width: 0 }}
               animate={{ width: `${quotaPercent}%` }}
               transition={{ duration: 1, delay: 0.5, ease: "easeOut" }}
-              className={`h-full rounded-full ${isLowQuota ? "bg-gradient-to-r from-red-600 to-orange-500" : "bg-gradient-to-r from-orange-600 to-amber-400"}`}
+              className={`h-full rounded-full ${isFullQuota ? "bg-slate-400 dark:bg-slate-600" : isLowQuota ? "bg-gradient-to-r from-red-600 to-orange-500" : "bg-gradient-to-r from-orange-600 to-amber-400"}`}
             />
           </div>
           <p className="text-xs text-slate-500 mt-2 font-medium">
-            {isLowQuota ? "Kuota hampir habis — daftar sekarang sebelum kehabisan!" : `${quotaPercent}% kuota masih tersedia`}
+            {isFullQuota ? "Maaf, kuota untuk acara ini sudah penuh." : isLowQuota ? "Kuota hampir habis — daftar sekarang sebelum kehabisan!" : `${quotaPercent}% kuota masih tersedia`}
           </p>
         </motion.section>
       </main>
 
       {/* STICKY BOTTOM BUTTON */}
-      <div className="fixed bottom-0 left-0 w-full z-50 px-6 pt-4 pb-safe-nav bg-gradient-to-t from-white via-white/95 dark:from-[#0B1120] dark:via-[#0B1120]/95 to-transparent">
+      <div className="fixed bottom-0 left-0 w-full z-50 px-6 pt-4 pb-8 bg-gradient-to-t from-white via-white/95 dark:from-[#0B1120] dark:via-[#0B1120]/95 to-transparent">
         <motion.button
           type="button"
           whileTap={{ scale: 0.98 }}
