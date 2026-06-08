@@ -41,17 +41,23 @@ const NavButton = memo(function NavButton({ icon, label, isActive, onClick, aria
 });
 
 interface TicketButtonProps {
+  isActive: boolean;
   onClick: () => void;
 }
 
-const TicketButton = memo(function TicketButton({ onClick }: TicketButtonProps) {
+const TicketButton = memo(function TicketButton({ isActive, onClick }: TicketButtonProps) {
   return (
     <button
       onClick={onClick}
       aria-label="My Tickets"
-      className="w-14 h-14 rounded-full flex items-center justify-center text-white -mt-8 border-4 border-white dark:border-[#0B1120] touch-target transition-transform bg-gradient-to-tr from-orange-400 to-amber-300 shadow-lg hover:-translate-y-1"
+      aria-current={isActive ? "page" : undefined}
+      className={`w-14 h-14 rounded-full flex items-center justify-center -mt-8 border-4 border-white dark:border-[#0B1120] touch-target transition-all shadow-lg ${
+        isActive
+          ? "bg-gradient-to-tr from-orange-600 to-amber-500 translate-y-[-2px] shadow-[0_4px_16px_rgba(249,115,22,0.5)]"
+          : "bg-gradient-to-tr from-orange-400 to-amber-300 hover:-translate-y-1"
+      }`}
     >
-      <Ticket className="w-6 h-6" />
+      <Ticket className="w-6 h-6 text-white" />
     </button>
   );
 });
@@ -175,21 +181,21 @@ function MainLayoutContent() {
               ariaLabel="Navigate to Explore"
             />
 
-            <TicketButton onClick={() => navigate('/tickets')} />
+            <TicketButton isActive={activeIndex === 2} onClick={() => navigate('/app/tickets')} />
 
             <NavButton
               icon={<Calendar className="w-6 h-6" />}
               label="Schedule"
-              isActive={activeIndex === 2}
-              onClick={() => handleNavClick(2)}
+              isActive={activeIndex === 3}
+              onClick={() => handleNavClick(3)}
               ariaLabel="Navigate to Schedule"
             />
 
             <NavButton
               icon={<User className="w-6 h-6" />}
               label="Profile"
-              isActive={activeIndex === 3}
-              onClick={() => handleNavClick(3)}
+              isActive={activeIndex === 4}
+              onClick={() => handleNavClick(4)}
               ariaLabel="Navigate to Profile"
             />
           </motion.nav>

@@ -33,12 +33,12 @@ export const router = createBrowserRouter(
         { path: "scanner", Component: CommitteeScanner },
         { path: "notifications", Component: Notifications },
 
-        // Main layout routes (with bottom nav)
+        // Main layout routes (with bottom nav) — unique path avoids conflict
         {
-          path: "/",
+          path: "app",
           Component: MainLayout,
           children: [
-            { path: "dashboard", Component: Dashboard },
+            { index: true, Component: Dashboard },
             { path: "explore", Component: Explore },
             { path: "tickets", Component: MyTickets },
             { path: "schedule", Component: Schedule },

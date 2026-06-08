@@ -44,7 +44,7 @@ export function EventDetail() {
         <p className="text-slate-400 text-sm mb-6">Event yang Anda cari mungkin sudah tidak tersedia.</p>
         <button
           type="button"
-          onClick={() => navigate("/explore")}
+          onClick={() => navigate("/app/explore")}
           className="px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold rounded-2xl"
         >
           Kembali ke Explore

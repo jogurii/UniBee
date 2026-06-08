@@ -151,7 +151,7 @@ export function MyTickets() {
                   : "Kamu belum memiliki acara yang telah selesai."}
               </p>
               <button
-                onClick={() => navigate('/explore')}
+                onClick={() => navigate('/app/explore')}
                 className="px-8 py-4 bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-500 font-bold rounded-2xl hover:bg-orange-100 transition-colors"
               >
                 Cari Event Baru

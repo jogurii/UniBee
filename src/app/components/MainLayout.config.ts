@@ -3,8 +3,8 @@
  * Extracted for better separation of concerns and reusability
  */
 
-// Page routes for swipe navigation
-export const PAGES = ["/dashboard", "/explore", "/schedule", "/profile"] as const;
+// Page routes for swipe navigation (matches bottom nav order: Home, Explore, Tickets, Schedule, Profile)
+export const PAGES = ["/app", "/app/explore", "/app/tickets", "/app/schedule", "/app/profile"] as const;
 
 // Animation variants - moved outside component for stability
 export const pageVariants = {
@@ -25,8 +25,18 @@ export const pageVariants = {
  * @returns Index of the page in PAGES array, or -1 if not found
  */
 export function getPageIndex(path: string): number {
-  const seg = "/" + path.split("/")[1];
-  return PAGES.indexOf(seg as (typeof PAGES)[number]);
+  // Strip base URL prefix (e.g., "/UniBee") for matching
+  const cleanPath = path.replace(/^\/UniBee/, "");
+  // Find the longest matching page path
+  let bestIndex = -1;
+  for (let i = 0; i < PAGES.length; i++) {
+    if (cleanPath.startsWith(PAGES[i])) {
+      if (bestIndex === -1 || PAGES[i].length > PAGES[bestIndex].length) {
+        bestIndex = i;
+      }
+    }
+  }
+  return bestIndex;
 }
 
 // Animation config

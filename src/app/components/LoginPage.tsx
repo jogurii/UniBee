@@ -20,7 +20,7 @@ export function LoginPage() {
   const handle2FAVerify = () => {
     setLoginStep("success");
     // Simulasi sukses, navigasi ke dashboard
-    setTimeout(() => navigate("/dashboard"), 1500);
+    setTimeout(() => navigate("/app"), 1500);
   };
 
   return (

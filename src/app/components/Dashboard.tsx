@@ -100,7 +100,7 @@ const UpcomingSchedule = memo(function UpcomingSchedule({ event, onNavigate }: U
       <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-6 shadow-md text-center">
         <p className="text-slate-500 dark:text-slate-400 text-sm">Tidak ada acara mendatang.</p>
         <button
-          onClick={() => onNavigate("/explore")}
+          onClick={() => onNavigate("/app/explore")}
           className="mt-3 text-orange-500 font-bold text-sm hover:underline"
         >
           Cari Event Baru
@@ -138,7 +138,7 @@ const UpcomingSchedule = memo(function UpcomingSchedule({ event, onNavigate }: U
       <button
         onClick={(e) => {
           e.stopPropagation();
-          onNavigate("/tickets");
+          onNavigate("/app/tickets");
         }}
         className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-100 dark:border-blue-500/30 hover:bg-blue-100 dark:hover:bg-blue-500/30 transition-colors"
       >
@@ -224,7 +224,7 @@ export function Dashboard() {
       <main className="px-6 space-y-8 relative z-10 pb-32">
         {/* Mini Progress Bar */}
         <section
-          onClick={() => navigate("/achievements")}
+          onClick={() => navigate("/app/achievements")}
           className="bg-white/95 dark:bg-white/5 border border-slate-200 dark:border-white/10 backdrop-blur-xl rounded-3xl p-5 shadow-xl shadow-slate-200/50 relative overflow-hidden cursor-pointer hover:border-orange-500/50 transition-colors group"
         >
           <div className="absolute top-4 right-4 text-slate-400 group-hover:text-orange-500 transition-colors">
@@ -260,7 +260,7 @@ export function Dashboard() {
             <h2 className="text-lg font-bold text-slate-900 dark:text-white">Featured Events</h2>
             <button
               type="button"
-              onClick={() => navigate("/explore")}
+              onClick={() => navigate("/app/explore")}
               className="text-sm text-orange-600 font-bold flex items-center hover:text-orange-500 transition-colors"
             >
               Lihat Semua

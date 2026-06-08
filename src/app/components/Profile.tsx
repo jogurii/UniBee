@@ -108,7 +108,7 @@ export function Profile() {
           <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest ml-4 mb-4">Aktivitas Mahasiswa</h2>
           <div className="bg-white dark:bg-white/5 border border-slate-100 dark:border-white/10 rounded-3xl p-2 space-y-1 shadow-sm">
             
-            <div onClick={() => navigate('/achievements')} className="flex items-center justify-between p-4 rounded-2xl hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer">
+            <div onClick={() => navigate('/app/achievements')} className="flex items-center justify-between p-4 rounded-2xl hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer">
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 bg-orange-50 dark:bg-orange-500/20 rounded-xl flex items-center justify-center text-orange-600 dark:text-orange-400">
                   <Award className="w-5 h-5" />

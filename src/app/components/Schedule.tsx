@@ -247,7 +247,7 @@ export function Schedule() {
               </div>
               <p className="text-slate-500 font-medium italic">Belum ada acara terjadwal untuk tanggal ini.</p>
               <button
-                onClick={() => navigate('/explore')}
+                onClick={() => navigate('/app/explore')}
                 className="mt-6 px-6 py-3 bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 font-bold rounded-xl flex items-center gap-2 hover:bg-orange-100 transition-colors"
               >
                 Cari Event Baru <ChevronRight className="w-4 h-4" />
